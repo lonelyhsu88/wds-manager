@@ -1,0 +1,63 @@
+{
+  "version": "1.1.0",
+  "history": [
+    {
+      "version": "1.1.0",
+      "date": "2025-10-25",
+      "changes": [
+        "Added real-time deployment progress with Socket.IO",
+        "Added progress percentage and current file display",
+        "Added game versions page to view version.txt from deployed games",
+        "Sorted Build Artifacts Browser by newest first",
+        "Improved deployment progress tracking"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Initial release",
+        "S3 artifacts browser with subdirectory selection",
+        "Multi-select and select-all functionality",
+        "Deployment with delete-before-upload strategy",
+        "Automatic zip extraction during upload",
+        "Version management system",
+        "IAM policy with least privilege principle"
+      ]
+    }
+  ],
+  "deployments": [
+    {
+      "version": "1.1.0",
+      "timestamp": "2025-10-25T17:23:36.111Z",
+      "artifactsCount": 3,
+      "filesDeployed": 1125,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.0.1",
+      "timestamp": "2025-10-25T17:15:00.633Z",
+      "artifactsCount": 3,
+      "filesDeployed": 5109,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.0.1",
+      "timestamp": "2025-10-25T17:12:40.568Z",
+      "artifactsCount": 1,
+      "filesDeployed": 133,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.0.1",
+      "timestamp": "2025-10-25T17:12:12.302Z",
+      "artifactsCount": 1,
+      "filesDeployed": 1790,
+      "status": "success",
+      "errors": []
+    }
+  ]
+}

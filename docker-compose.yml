@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  wds-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VERSION=${APP_VERSION:-1.0.1}
+    image: ${DOCKER_IMAGE_NAME:-wds-manager}:${APP_VERSION:-latest}
+    container_name: wds-manager
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3015}:${PORT:-3015}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - AWS_PROFILE=${AWS_PROFILE}
+      - AWS_REGION=${AWS_REGION}
+      - BUILD_ARTIFACTS_BUCKET=${BUILD_ARTIFACTS_BUCKET}
+      - DEPLOY_WEBUI_BUCKET=${DEPLOY_WEBUI_BUCKET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - PORT=${PORT:-3015}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - APP_VERSION=${APP_VERSION:-1.0.1}
+      - DEFAULT_CLEAR_BEFORE_DEPLOY=${DEFAULT_CLEAR_BEFORE_DEPLOY:-true}
+      - DEFAULT_EXTRACT_ZIP=${DEFAULT_EXTRACT_ZIP:-true}
+      - DEFAULT_TARGET_PREFIX=${DEFAULT_TARGET_PREFIX}
+    volumes:
+      # Mount AWS credentials (read-only)
+      - ~/.aws:/home/nodejs/.aws:ro
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount version file to persist version history
+      - ./version.json:/app/version.json
+    networks:
+      - wds-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${PORT:-3015}/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  wds-network:
+    driver: bridge
+
+# Optional: Add this if you want to use external network
+# networks:
+#   wds-network:
+#     external: true

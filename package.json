@@ -1,0 +1,35 @@
+{
+  "name": "webui-deployment-system-manager",
+  "version": "1.1.0",
+  "description": "WebUI Deployment System Manager - Deploy artifacts from build bucket to webui bucket",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "s3",
+    "deployment",
+    "webui"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "aws-sdk": "^2.1509.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "helmet": "^7.1.0",
+    "multer": "^1.4.5-lts.1",
+    "p-limit": "^3.1.0",
+    "socket.io": "^4.8.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

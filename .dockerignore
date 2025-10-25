@@ -1,0 +1,50 @@
+# Node modules
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+!CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker files (not needed in image)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# AWS setup scripts (not needed in runtime)
+aws/setup-iam.sh
