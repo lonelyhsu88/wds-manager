@@ -1,6 +1,257 @@
 {
-  "version": "1.1.0",
+  "version": "1.13.0",
   "history": [
+    {
+      "version": "1.13.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Enhanced game categorization system with complete category support",
+        "Added 6 new game categories:",
+        "- Resources: i18n, bundle-i18n, bundle-common, game-webview, bundle-common-freeBonus, game-configs",
+        "- Dashboard: gemini-dashboard",
+        "- Event: event",
+        "- Jump Page: jump-page",
+        "- Game Demo: GameDemo",
+        "- External Management: ex-mgmt",
+        "Updated categorizeArtifacts to support all new categories",
+        "All game artifacts now properly categorized based on release notes",
+        "Fixed deployment recording to show operations in Deployment History",
+        "Versions page deployments now appear in Deployment History",
+        "Added versionManager.recordDeployment() call in deployment API"
+      ]
+    },
+    {
+      "version": "1.12.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Phase 1-3 Complete Optimization Release",
+        "Phase 1: Quick Improvements",
+        "- Added toast notification system for modern user feedback (success/error/warning/info)",
+        "- Implemented global search and filter system with real-time fuzzy matching",
+        "- Added category filters (Hash/Bingo/Arcade/All) for quick game filtering",
+        "- Implemented favorites system with localStorage persistence",
+        "- Added deployment presets management (save/load/delete)",
+        "- Built-in presets: All Hash Games, All Bingo Games, All Arcade Games",
+        "- Keyboard shortcuts: Ctrl+K (search), Ctrl+S (save preset), Ctrl+L (load preset)",
+        "- Search highlights matching text with yellow background",
+        "- Toast notifications auto-dismiss and stack properly (max 5)",
+        "Phase 2: Visual Enhancements",
+        "- Created comprehensive Dashboard with Chart.js statistics",
+        "- Added deployment trend charts (line chart for daily trends)",
+        "- Added success/failure distribution doughnut chart",
+        "- Added top 10 deployed games bar chart",
+        "- Implemented card view mode for artifacts browser",
+        "- Enhanced progress visualization with circular SVG progress rings",
+        "- Added stage tracking (Download → Extract → Upload → Verify → Complete)",
+        "- Improved visual feedback with color-coded progress states",
+        "- Dashboard auto-refreshes every 30 seconds",
+        "Phase 3: Advanced Features",
+        "- Parallel deployment already implemented with p-limit concurrency control",
+        "- Configurable parallelism via MAX_PARALLEL_ARTIFACTS env variable",
+        "- Added version comparison feature for side-by-side file analysis",
+        "- Version compare shows Added/Removed/Modified/Unchanged files",
+        "- File-level diff view with size comparison",
+        "- API endpoint for artifact file list extraction from ZIP files"
+      ]
+    },
+    {
+      "version": "1.11.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Enhanced rollback functionality with real-time progress tracking",
+        "Renamed 'Redeploy' button to 'RollBack' for clarity",
+        "Added rollback progress modal with Socket.IO real-time updates",
+        "Integrated comprehensive audit logging for rollback operations",
+        "Audit logs record user, timestamp, artifacts, options, and duration",
+        "Rollback operations logged to logs/audit.log with full traceability",
+        "CSP-compliant event handling (removed inline onclick handlers)",
+        "Progress tracking shows artifact-level status during rollback"
+      ]
+    },
+    {
+      "version": "1.10.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Added deployment history page with rollback functionality",
+        "View last 30 deployments with details (artifacts, files, status)",
+        "Redeploy button to rollback to previous deployments",
+        "Details modal shows artifact list and deployment options",
+        "New API endpoint: GET /api/deployment-history",
+        "Enhanced deployment records with artifactKeys and options"
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Added version comparison check before deployment",
+        "System now warns if artifact version is older than deployed version",
+        "Semantic version comparison (e.g., 1.0.5 < 1.0.6)",
+        "Warning dialog shows which artifacts are older with confirmation prompt",
+        "New API endpoint: POST /api/check-versions"
+      ]
+    },
+    {
+      "version": "1.8.3",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed game name parsing to extract full name before '-prd-'",
+        "Example: event-b-prd-1.0.6.zip now correctly deploys to event-b/",
+        "Pattern: {GameName}-prd-{version}.zip → {GameName}/",
+        "Supports game names with hyphens (e.g., event-b, multi-crash)"
+      ]
+    },
+    {
+      "version": "1.8.2",
+      "date": "2025-10-26",
+      "changes": [
+        "Removed auto-cleanup of source artifacts from jenkins-build-artfs",
+        "Build artifacts are now preserved after deployment",
+        "Only deploy-webui-bucket is cleared during deployment (if option enabled)",
+        "Fixed Game Versions page to display correct version number"
+      ]
+    },
+    {
+      "version": "1.8.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed authentication bypass issue",
+        "Moved route handlers before static file middleware",
+        "Now correctly redirects to login page when not authenticated",
+        "Security fix: index.html is now protected by authentication"
+      ]
+    },
+    {
+      "version": "1.8.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Added custom prefix option for manual deployment path control",
+        "Empty prefix = Auto-parse game name from artifact filename",
+        "Custom prefix = Deploy all artifacts to specified directory",
+        "Flexible deployment strategy: auto or manual path selection",
+        "Clear operation respects custom prefix or auto-parsed game directories"
+      ]
+    },
+    {
+      "version": "1.7.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed progress percentage exceeding 100% (was showing 1000%+)",
+        "Fixed ZIP extraction to skip root directory",
+        "Now correctly deploys ZIP contents directly to game directory",
+        "Example: MultiPlayerCrashGR-prd-1.0.17.zip extracts to deploy-webui-bucket/MultiPlayerCrashGR/ (without intermediate directory)",
+        "Added progress clamping to all artifact and file progress calculations"
+      ]
+    },
+    {
+      "version": "1.7.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Auto-parse game name from artifact filename",
+        "Example: MultiPlayerCrashNE-prd-1.0.20.zip → deploy-webui-bucket/MultiPlayerCrashNE/",
+        "Removed manual game name selector - fully automatic now",
+        "Each artifact deploys to its own game directory",
+        "Clear before deploy now clears only affected game directories",
+        "Deployment shows which games are being processed"
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Added game name selector for deployment (removed in 1.7.0)",
+        "10 predefined game names",
+        "Custom path option",
+        "Deploy button requires game name selection",
+        "Clear bucket clears selected game's directory"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Auto-cleanup deployed artifacts from build bucket",
+        "Successfully deployed artifacts are automatically deleted from jenkins-build-artfs",
+        "Cleanup phase added to deployment process (95% progress)",
+        "Deployment log now includes cleaned artifacts count and size"
+      ]
+    },
+    {
+      "version": "1.4.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed progress percentage exceeding 100%",
+        "Added clamping to ensure progress stays within 0-100% range"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Major improvement: Parallel artifact progress display",
+        "Now shows 3 separate progress cards for concurrent artifacts",
+        "Each card displays artifact name, status, progress bar, and current file",
+        "Visual indicators for downloading, extracting, and uploading states",
+        "Beautiful card-based UI with real-time progress updates"
+      ]
+    },
+    {
+      "version": "1.3.2",
+      "date": "2025-10-26",
+      "changes": [
+        "Enhanced deployment progress display",
+        "Now shows all files being uploaded simultaneously",
+        "Real-time progress tracking for concurrent uploads",
+        "Improved visual feedback during parallel deployment"
+      ]
+    },
+    {
+      "version": "1.3.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed delete validation regex bug (double backslash issue)",
+        "Delete functionality now works correctly for all file names"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Optimized deployment speed with parallel artifact processing",
+        "Increased upload concurrency from 10 to 20",
+        "Added parallel artifact processing (up to 3 concurrent)",
+        "Significantly improved deployment performance for multiple artifacts"
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2025-10-26",
+      "changes": [
+        "Added delete functionality for build artifacts",
+        "Delete button in Build Artifacts Browser",
+        "Support for deleting both files and directories",
+        "Confirmation dialog before deletion",
+        "Shows deleted items count and total size"
+      ]
+    },
+    {
+      "version": "1.1.2",
+      "date": "2025-10-26",
+      "changes": [
+        "Added version display on login page"
+      ]
+    },
+    {
+      "version": "1.1.1",
+      "date": "2025-10-26",
+      "changes": [
+        "Fixed AWS S3 region configuration (ap-east-1)",
+        "Updated build artifacts bucket to jenkins-build-artfs",
+        "Added Google OAuth2 authentication",
+        "Added email domain filtering (jvd.tw)",
+        "Configured proper S3 bucket access"
+      ]
+    },
     {
       "version": "1.1.0",
       "date": "2025-10-25",
@@ -27,6 +278,465 @@
     }
   ],
   "deployments": [
+    {
+      "version": "1.13.0",
+      "timestamp": "2025-10-26T16:32:34.115Z",
+      "artifactKeys": [
+        "20250903/MultiPlayerCrashCL-prd-1.0.36.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 163,
+      "status": "success",
+      "isRollback": true,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.13.0",
+      "timestamp": "2025-10-26T16:32:34.112Z",
+      "artifactKeys": [
+        "20250903/MultiPlayerCrashCL-prd-1.0.36.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 163,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T16:07:13.108Z",
+      "artifactKeys": [
+        "20250925/bundle-common-prd-1.2.9.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 566,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T16:06:30.892Z",
+      "artifactKeys": [
+        "20251007/event-b-prd-1.0.16.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 60,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T16:05:06.508Z",
+      "artifactKeys": [
+        "20250903/MultiPlayerAviator2-prd-1.0.4.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 134,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T15:56:48.994Z",
+      "artifactKeys": [
+        "20250828/MultiPlayerAviator-prd-1.0.24.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 131,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T15:53:04.425Z",
+      "artifactKeys": [
+        "20250828/MultiPlayerAviator-prd-1.0.24.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 131,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.12.0",
+      "timestamp": "2025-10-26T15:52:21.771Z",
+      "artifactKeys": [
+        "20250903/StandAloneMines-prd-1.0.67.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 100,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.11.0",
+      "timestamp": "2025-10-26T14:48:59.229Z",
+      "artifactKeys": [
+        "20251003/MagicBingo-prd-1.0.41.zip",
+        "20251003/MagicBingo-prd-1.0.40.zip",
+        "20251003/game-configs-prd-1.0.4.zip",
+        "20251003/StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "20251003/StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "20251003/StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "20251003/StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "20251003/StandAloneWheel-prd-1.0.53.zip",
+        "20251003/StandAloneVideoPoker-prd-1.0.44.zip",
+        "20251003/StandAlonePlinkoGR-prd-1.0.14.zip",
+        "20251003/StandAlonePlinkoNE-prd-1.0.19.zip",
+        "20251003/StandAlonePlinkoCL-prd-1.0.32.zip",
+        "20251003/StandAlonePlinko-prd-1.0.50.zip",
+        "20251003/StandAloneMinesSC-prd-1.0.6.zip",
+        "20251003/StandAloneMinesRaider-prd-1.0.13.zip",
+        "20251003/StandAloneMinesPM-prd-1.0.10.zip",
+        "20251003/StandAloneMinesNE-prd-1.0.22.zip",
+        "20251003/StandAloneMinesMA-prd-1.0.14.zip",
+        "20251003/StandAloneMinesGR-prd-1.0.18.zip",
+        "20251003/StandAloneMinesCL-prd-1.0.35.zip",
+        "20251003/StandAloneMinesCA-prd-1.0.8.zip",
+        "20251003/StandAloneMines-prd-1.0.68.zip",
+        "20251003/StandAloneLimboGR-prd-1.0.15.zip",
+        "20251003/StandAloneLimboNE-prd-1.0.20.zip",
+        "20251003/StandAloneLimboCL-prd-1.0.29.zip",
+        "20251003/StandAloneLimbo-prd-1.0.52.zip",
+        "20251003/StandAloneKeno-prd-1.0.51.zip",
+        "20251003/MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "20251003/StandAloneLuckyHilo-prd-1.0.12.zip",
+        "20251003/StandAloneHiloGR-prd-1.0.16.zip",
+        "20251003/StandAloneHiloNE-prd-1.0.21.zip",
+        "20251003/StandAloneHiloCL-prd-1.0.26.zip",
+        "20251003/StandAloneHilo-prd-1.0.51.zip",
+        "20251003/Steampunk2-prd-1.0.4.zip",
+        "20251003/StandAloneEgyptHilo-prd-1.0.7.zip",
+        "20251003/Steampunk-prd-1.0.56.zip",
+        "20251003/StandAloneDragonTower-prd-1.0.8.zip",
+        "20251003/OdinBingo-prd-1.0.61.zip",
+        "20251003/StandAloneDice-prd-1.0.59.zip",
+        "20251003/MapleBingo-prd-1.0.14.zip",
+        "20251003/StandAloneDiamonds-prd-1.0.48.zip",
+        "20251003/MagicBingo-prd-1.0.39.zip",
+        "20251003/MultiPlayerCrashGR-prd-1.0.16.zip",
+        "20251003/LostRuins-prd-1.0.52.zip",
+        "20251003/MultiPlayerCrashNE-prd-1.0.19.zip",
+        "20251003/EggHuntBingo-prd-1.0.6.zip",
+        "20251003/MultiPlayerCrashCL-prd-1.0.37.zip",
+        "20251003/CaveBingo-prd-1.0.57.zip",
+        "20251003/MultiPlayerCrash-prd-1.0.56.zip",
+        "20251003/CaribbeanBingo-prd-1.0.67.zip",
+        "20251003/MultiPlayerBoomersGR-prd-1.0.7.zip",
+        "20251003/MultiPlayerAviator2XIN-prd-1.0.2.zip",
+        "20251003/BonusBingo-prd-1.0.19.zip",
+        "20251003/StandAloneWildDigGR-prd-1.0.2.zip",
+        "20251003/MultiPlayerAviator2-prd-1.0.6.zip",
+        "20251003/ArcadeBingo-prd-1.0.8.zip",
+        "20251003/StandAloneForestTeaParty-prd-1.0.4.zip",
+        "20251003/MultiPlayerAviator-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 58,
+      "filesDeployed": 10051,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.11.0",
+      "timestamp": "2025-10-26T14:45:55.913Z",
+      "artifactKeys": [
+        "20251003-event/event-b-prd-1.0.15.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 60,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.11.0",
+      "timestamp": "2025-10-26T14:33:32.001Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:24:15.909Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:20:42.708Z",
+      "artifactKeys": [
+        "20251009/jump-page-prd-1.0.20.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 64,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:18:46.833Z",
+      "artifactKeys": [
+        "20251003-event/event-b-prd-1.0.15.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 60,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:18:30.016Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:17:12.020Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip",
+        "20251003-event/event-b-prd-1.0.15.zip"
+      ],
+      "artifactsCount": 2,
+      "filesDeployed": 121,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:16:50.173Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.10.0",
+      "timestamp": "2025-10-26T14:16:03.415Z",
+      "artifactKeys": [
+        "dean-test/event-b-prd-1.0.6.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.8.2",
+      "timestamp": "2025-10-26T13:37:54.792Z",
+      "artifactsCount": 1,
+      "filesDeployed": 60,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.2",
+      "timestamp": "2025-10-26T13:37:08.386Z",
+      "artifactsCount": 2,
+      "filesDeployed": 121,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.2",
+      "timestamp": "2025-10-26T13:36:45.823Z",
+      "artifactsCount": 1,
+      "filesDeployed": 61,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.1",
+      "timestamp": "2025-10-26T13:31:01.461Z",
+      "artifactsCount": 1,
+      "filesDeployed": 497,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.1",
+      "timestamp": "2025-10-26T13:30:28.059Z",
+      "artifactsCount": 15,
+      "filesDeployed": 15458,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.1",
+      "timestamp": "2025-10-26T13:28:06.061Z",
+      "artifactsCount": 7,
+      "filesDeployed": 5975,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.8.0",
+      "timestamp": "2025-10-26T13:25:08.047Z",
+      "artifactsCount": 1,
+      "filesDeployed": 131,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.7.0",
+      "timestamp": "2025-10-26T13:12:11.449Z",
+      "artifactsCount": 1,
+      "filesDeployed": 131,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.7.0",
+      "timestamp": "2025-10-26T13:11:33.214Z",
+      "artifactsCount": 1,
+      "filesDeployed": 497,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.4.1",
+      "timestamp": "2025-10-26T11:14:54.363Z",
+      "artifactsCount": 58,
+      "filesDeployed": 10051,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.4.0",
+      "timestamp": "2025-10-26T10:58:21.259Z",
+      "artifactsCount": 15,
+      "filesDeployed": 15458,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.3.2",
+      "timestamp": "2025-10-26T09:01:13.857Z",
+      "artifactsCount": 15,
+      "filesDeployed": 15458,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.1.2",
+      "timestamp": "2025-10-26T08:37:56.730Z",
+      "artifactsCount": 1,
+      "filesDeployed": 497,
+      "status": "success",
+      "errors": []
+    },
+    {
+      "version": "1.1.0",
+      "timestamp": "2025-10-26T06:27:56.776Z",
+      "artifactsCount": 10,
+      "filesDeployed": 6734,
+      "status": "success",
+      "errors": []
+    },
     {
       "version": "1.1.0",
       "timestamp": "2025-10-25T17:23:36.111Z",

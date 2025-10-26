@@ -5,20 +5,105 @@ class DeploymentManager {
         this.currentPrefix = '';
         this.selectedFiles = new Set();
         this.allFiles = [];
+        this.viewMode = 'category'; // 'list', 'category', or 'card'
+        this.searchFilter = null;
+        this.presetManager = null;
+
+        // Load view mode preference from localStorage
+        const savedViewMode = localStorage.getItem('viewMode');
+        if (savedViewMode && ['list', 'category', 'card'].includes(savedViewMode)) {
+            this.viewMode = savedViewMode;
+        }
+
         this.init();
     }
 
     init() {
+        this.loadUserInfo();
         this.setupEventListeners();
         this.checkBucketAccess();
         this.loadVersion();
+        this.restoreViewMode();
         this.loadArtifacts();
+
+        // Initialize search and filter system
+        if (window.SearchFilter) {
+            this.searchFilter = new SearchFilter(this);
+        }
+
+        // Initialize preset manager
+        if (window.PresetManager) {
+            this.presetManager = new PresetManager(this);
+        }
+    }
+
+    restoreViewMode() {
+        // Set button states based on saved view mode
+        const listBtn = document.getElementById('view-list-btn');
+        const categoryBtn = document.getElementById('view-category-btn');
+        const cardBtn = document.getElementById('view-card-btn');
+
+        listBtn.classList.remove('active');
+        categoryBtn.classList.remove('active');
+        cardBtn.classList.remove('active');
+
+        if (this.viewMode === 'list') {
+            listBtn.classList.add('active');
+        } else if (this.viewMode === 'card') {
+            cardBtn.classList.add('active');
+        } else {
+            categoryBtn.classList.add('active');
+        }
+    }
+
+    async loadUserInfo() {
+        try {
+            const response = await fetch('/auth/status');
+            const data = await response.json();
+
+            if (data.authenticated && data.user) {
+                // Update user name
+                document.getElementById('user-name').textContent = data.user.displayName || data.user.email.split('@')[0];
+
+                // Update user email
+                document.getElementById('user-email').textContent = data.user.email;
+
+                // Update user photo if available
+                if (data.user.photo) {
+                    const userPhoto = document.getElementById('user-photo');
+                    const userIcon = document.getElementById('user-icon');
+                    userPhoto.src = data.user.photo;
+                    userPhoto.style.display = 'inline-block';
+                    userIcon.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user info:', error);
+        }
     }
 
     setupEventListeners() {
+        // View toggle buttons
+        document.getElementById('view-list-btn').addEventListener('click', () => {
+            this.switchView('list');
+        });
+
+        document.getElementById('view-category-btn').addEventListener('click', () => {
+            this.switchView('category');
+        });
+
+        document.getElementById('view-card-btn').addEventListener('click', () => {
+            this.switchView('card');
+        });
+
         // Refresh button
         document.getElementById('refresh-btn').addEventListener('click', () => {
             this.loadArtifacts(this.currentPrefix);
+        });
+
+        // Back button
+        document.getElementById('back-btn').addEventListener('click', () => {
+            this.navigateBack();
         });
 
         // Select/Deselect all buttons
@@ -45,11 +130,17 @@ class DeploymentManager {
             this.clearDeployBucket();
         });
 
+        // Delete selected button
+        document.getElementById('delete-selected-btn').addEventListener('click', () => {
+            this.deleteSelected();
+        });
+
         // Version modal
         const versionModal = document.getElementById('versionModal');
         versionModal.addEventListener('show.bs.modal', () => {
             this.loadVersionHistory();
         });
+
     }
 
     async checkBucketAccess() {
@@ -70,7 +161,7 @@ class DeploymentManager {
             deployStatus.className = `badge ${data.deployWebUIBucket.accessible ? 'bg-success' : 'bg-danger'}`;
         } catch (error) {
             console.error('Error checking bucket access:', error);
-            this.showAlert('Failed to check bucket access', 'danger');
+            window.toast.error('Failed to check bucket access');
         }
     }
 
@@ -112,27 +203,91 @@ class DeploymentManager {
         }
     }
 
+    switchView(mode) {
+        this.viewMode = mode;
+
+        // Save preference to localStorage
+        localStorage.setItem('viewMode', mode);
+
+        // Update button states
+        const listBtn = document.getElementById('view-list-btn');
+        const categoryBtn = document.getElementById('view-category-btn');
+        const cardBtn = document.getElementById('view-card-btn');
+
+        listBtn.classList.remove('active');
+        categoryBtn.classList.remove('active');
+        cardBtn.classList.remove('active');
+
+        if (mode === 'list') {
+            listBtn.classList.add('active');
+        } else if (mode === 'category') {
+            categoryBtn.classList.add('active');
+        } else if (mode === 'card') {
+            cardBtn.classList.add('active');
+        }
+
+        // Reload artifacts with new view mode
+        this.loadArtifacts(this.currentPrefix);
+    }
+
     async loadArtifacts(prefix = '') {
         const fileList = document.getElementById('file-list');
-        fileList.innerHTML = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div><p class="mt-2">Loading...</p></div>';
+        const categoryView = document.getElementById('category-view');
+        const cardView = document.getElementById('card-view');
+
+        // Show loading state
+        const loadingHtml = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div><p class="mt-2">Loading...</p></div>';
+
+        if (this.viewMode === 'category') {
+            categoryView.innerHTML = loadingHtml;
+            categoryView.style.display = 'block';
+            fileList.style.display = 'none';
+            cardView.style.display = 'none';
+        } else if (this.viewMode === 'card') {
+            cardView.innerHTML = loadingHtml;
+            cardView.style.display = 'grid';
+            fileList.style.display = 'none';
+            categoryView.style.display = 'none';
+        } else {
+            fileList.innerHTML = loadingHtml;
+            fileList.style.display = 'block';
+            categoryView.style.display = 'none';
+            cardView.style.display = 'none';
+        }
 
         try {
-            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}`);
+            const categorizeParam = (this.viewMode === 'category' || this.viewMode === 'card') ? '&categorize=true' : '';
+            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}${categorizeParam}`);
             const data = await response.json();
 
             this.currentPrefix = prefix;
             this.allFiles = data.files;
 
             this.updateBreadcrumb(prefix);
-            this.renderFileList(data);
+
+            if (this.viewMode === 'category' && data.categories) {
+                this.renderCategoryView(data.categories);
+            } else if (this.viewMode === 'card' && data.categories) {
+                this.renderCardView(data.categories);
+            } else {
+                this.renderFileList(data);
+            }
         } catch (error) {
             console.error('Error loading artifacts:', error);
-            fileList.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Failed to load artifacts</p></div>';
+            const errorHtml = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Failed to load artifacts</p></div>';
+            if (this.viewMode === 'category') {
+                categoryView.innerHTML = errorHtml;
+            } else if (this.viewMode === 'card') {
+                cardView.innerHTML = errorHtml;
+            } else {
+                fileList.innerHTML = errorHtml;
+            }
         }
     }
 
     updateBreadcrumb(prefix) {
         const breadcrumb = document.getElementById('breadcrumb');
+        const backBtn = document.getElementById('back-btn');
         const parts = prefix.split('/').filter(p => p);
 
         let html = '<li class="breadcrumb-item"><a href="#" data-prefix="">Root</a></li>';
@@ -150,6 +305,13 @@ class DeploymentManager {
 
         breadcrumb.innerHTML = html;
 
+        // Show/hide back button based on whether we're at root
+        if (prefix && prefix.length > 0) {
+            backBtn.style.display = 'inline-block';
+        } else {
+            backBtn.style.display = 'none';
+        }
+
         // Add click handlers
         breadcrumb.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -157,6 +319,242 @@ class DeploymentManager {
                 const prefix = e.target.getAttribute('data-prefix');
                 this.loadArtifacts(prefix);
             });
+        });
+    }
+
+    navigateBack() {
+        // Split current prefix and remove the last part to go to parent
+        const parts = this.currentPrefix.split('/').filter(p => p);
+        if (parts.length > 0) {
+            parts.pop(); // Remove last directory
+            const parentPrefix = parts.length > 0 ? parts.join('/') + '/' : '';
+            this.loadArtifacts(parentPrefix);
+        }
+    }
+
+    parseVersion(filename) {
+        // Parse version from filenames like "MultiPlayerAviator-prd-1.0.26.zip"
+        // Matches patterns like: 1.0.26, v1.0.26, 2.3.4-beta, etc.
+        const versionMatch = filename.match(/[-_](\d+\.\d+\.\d+(?:[-.][\w]+)?)/);
+        return versionMatch ? versionMatch[1] : 'N/A';
+    }
+
+    getCategoryIcon(categoryName) {
+        const icons = {
+            'Hash Games': 'bi-hash',
+            'Bingo Games': 'bi-grid-3x3-gap-fill',
+            'Arcade Games': 'bi-joystick',
+            'Other': 'bi-collection'
+        };
+        return icons[categoryName] || 'bi-folder';
+    }
+
+    getCategoryColor(categoryName) {
+        const colors = {
+            'Hash Games': 'primary',
+            'Bingo Games': 'success',
+            'Arcade Games': 'warning',
+            'Other': 'secondary'
+        };
+        return colors[categoryName] || 'secondary';
+    }
+
+    renderCategoryView(categories) {
+        const categoryView = document.getElementById('category-view');
+        const accordion = document.getElementById('categoryAccordion');
+
+        if (!categories || Object.keys(categories).length === 0) {
+            categoryView.innerHTML = '<div class="empty-state"><i class="bi bi-folder-x"></i><p>No games found</p></div>';
+            return;
+        }
+
+        let html = '';
+        let index = 0;
+
+        // Order categories: Hash Games, Bingo Games, Arcade Games, Other
+        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Other'];
+        const sortedCategories = categoryOrder.filter(cat => categories[cat]);
+
+        sortedCategories.forEach(categoryName => {
+            const games = categories[categoryName];
+            const icon = this.getCategoryIcon(categoryName);
+            const color = this.getCategoryColor(categoryName);
+            const collapseId = `collapse${index}`;
+            const isFirst = index === 0;
+
+            html += `
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading${index}">
+                        <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+                                aria-expanded="${isFirst}" aria-controls="${collapseId}">
+                            <i class="bi ${icon} me-2"></i>
+                            ${categoryName}
+                            <span class="badge bg-${color} ms-2">${games.length}</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}"
+                         aria-labelledby="heading${index}" data-bs-parent="#categoryAccordion">
+                        <div class="accordion-body p-0">
+                            ${this.renderCategoryGames(games)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            index++;
+        });
+
+        accordion.innerHTML = html;
+
+        // Add event listeners for file selection
+        this.attachCategoryEventListeners();
+    }
+
+    renderCategoryGames(games) {
+        let html = '<div class="list-group list-group-flush">';
+
+        games.forEach(file => {
+            const isSelected = this.selectedFiles.has(file.fullPath);
+            const fileSize = this.formatFileSize(file.size);
+            const fileIcon = file.isZip ? 'bi-file-earmark-zip' : 'bi-file-earmark';
+            const lastModified = new Date(file.lastModified).toLocaleString();
+
+            html += `
+                <div class="list-group-item list-group-item-action file-item-category ${isSelected ? 'selected' : ''}"
+                     data-key="${file.fullPath}">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="checkbox" class="form-check-input"
+                                   ${isSelected ? 'checked' : ''}>
+                        </div>
+                        <i class="bi ${fileIcon} fs-4 me-3 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1">${file.name}</h6>
+                                ${file.isZip ? '<span class="badge bg-primary">ZIP</span>' : ''}
+                            </div>
+                            <div class="text-muted small">
+                                <span class="me-3"><i class="bi bi-hdd"></i> ${fileSize}</span>
+                                <span><i class="bi bi-clock"></i> ${lastModified}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    attachCategoryEventListeners() {
+        document.querySelectorAll('.file-item-category').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                }
+                this.toggleFileSelection(item);
+            });
+
+            item.querySelector('input[type="checkbox"]').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleFileSelection(item);
+            });
+        });
+    }
+
+
+    
+    renderCardView(categories) {
+        const cardView = document.getElementById('card-view');
+    
+        if (!categories || Object.keys(categories).length === 0) {
+            cardView.innerHTML = '<div class="empty-state"><i class="bi bi-folder-x"></i><p>No games found</p></div>';
+            return;
+        }
+    
+        let html = '';
+    
+        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Other'];
+        const sortedCategories = categoryOrder.filter(cat => categories[cat]);
+    
+        sortedCategories.forEach(categoryName => {
+            const games = categories[categoryName];
+            const categoryClass = categoryName.toLowerCase().replace(' ', '-');
+    
+            games.forEach(file => {
+                const isSelected = this.selectedFiles.has(file.fullPath);
+                const fileSize = this.formatFileSize(file.size);
+                const lastModified = new Date(file.lastModified).toLocaleDateString();
+                const gameName = file.name.replace(/\.(zip|tar\.gz)$/i, '');
+                const firstLetter = gameName.charAt(0).toUpperCase();
+    
+                const version = this.parseVersion(file.name);
+    
+                html += `
+                    <div class="game-card ${isSelected ? 'selected' : ''}" data-key="${file.fullPath}">
+                        <div class="game-card-header ${categoryClass}">
+                            <div class="game-card-icon">${firstLetter}</div>
+                            <input type="checkbox" class="form-check-input game-card-checkbox"
+                                   ${isSelected ? 'checked' : ''}>
+                        </div>
+                        <div class="game-card-body">
+                            <div class="game-card-title" title="${gameName}">${gameName}</div>
+                            <div class="game-card-meta">
+                                <div><i class="bi bi-hdd"></i> ${fileSize}</div>
+                                <div><i class="bi bi-clock"></i> ${lastModified}</div>
+                            </div>
+                            <div class="game-card-badges">
+                                ${version !== 'N/A' ? `<span class="badge bg-info">${version}</span>` : ''}
+                                <span class="badge bg-${this.getCategoryColor(categoryName)}">${categoryName}</span>
+                                ${file.isZip ? '<span class="badge bg-primary">ZIP</span>' : ''}
+                            </div>
+                            <div class="game-card-actions">
+                                <button class="btn btn-sm btn-primary card-deploy-btn" data-key="${file.fullPath}">
+                                    <i class="bi bi-rocket-takeoff"></i> Deploy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    
+        cardView.innerHTML = html;
+    
+        this.attachCardEventListeners();
+    }
+    
+    attachCardEventListeners() {
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.classList.contains('card-deploy-btn') ||
+                    e.target.closest('.card-deploy-btn') ||
+                    e.target.type === 'checkbox') {
+                    return; // Don't toggle selection if clicking deploy button or checkbox directly
+                }
+                const checkbox = card.querySelector('.game-card-checkbox');
+                checkbox.checked = !checkbox.checked;
+                this.toggleFileSelection(card);
+            });
+    
+            card.querySelector('.game-card-checkbox').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleFileSelection(card);
+            });
+    
+            const deployBtn = card.querySelector('.card-deploy-btn');
+            if (deployBtn) {
+                deployBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const key = deployBtn.getAttribute('data-key');
+                    this.selectedFiles.clear();
+                    this.selectedFiles.add(key);
+                    this.updateSelectionCount();
+                    this.deploy();
+                });
+            }
         });
     }
 
@@ -267,12 +665,16 @@ class DeploymentManager {
     }
 
     updateFileListSelection() {
-        document.querySelectorAll('.file-item').forEach(item => {
+        // Update both list view and category view items
+        const allItems = document.querySelectorAll('.file-item, .file-item-category');
+        allItems.forEach(item => {
             const key = item.getAttribute('data-key');
             const checkbox = item.querySelector('input[type="checkbox"]');
             const isSelected = this.selectedFiles.has(key);
 
-            checkbox.checked = isSelected;
+            if (checkbox) {
+                checkbox.checked = isSelected;
+            }
             item.classList.toggle('selected', isSelected);
         });
     }
@@ -282,18 +684,56 @@ class DeploymentManager {
         document.getElementById('selected-count').textContent = count;
         document.getElementById('deploy-btn').disabled = count === 0;
         document.getElementById('clear-selection-btn').disabled = count === 0;
+        document.getElementById('delete-selected-btn').disabled = count === 0;
     }
 
     async deploy() {
         if (this.selectedFiles.size === 0) {
-            this.showAlert('Please select at least one file to deploy', 'warning');
+            window.toast.warning('Please select at least one file to deploy');
             return;
         }
 
-        const confirmMsg = `Deploy ${this.selectedFiles.size} file(s) to the WebUI bucket?\n\nThis will:\n` +
-            `${document.getElementById('clear-before-deploy').checked ? '• Delete all existing files\n' : ''}` +
+        const customPrefix = document.getElementById('custom-prefix').value.trim();
+
+        // Step 1: Check versions
+        try {
+            const versionCheckResponse = await fetch('/api/check-versions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    artifactKeys: Array.from(this.selectedFiles)
+                })
+            });
+
+            const versionCheck = await versionCheckResponse.json();
+
+            // If there are version warnings, show them to the user
+            if (versionCheck.hasWarnings && versionCheck.warnings.length > 0) {
+                const warningMessages = versionCheck.warnings.map(w =>
+                    `${w.gameName}: ${w.artifactVersion} → ${w.deployedVersion} (older)`
+                ).join('\n');
+
+                const warningMsg = `⚠️  VERSION WARNING ⚠️\n\n` +
+                    `The following artifacts are OLDER than currently deployed versions:\n\n` +
+                    `${warningMessages}\n\n` +
+                    `Do you want to continue with deployment?`;
+
+                if (!confirm(warningMsg)) {
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Version check error:', error);
+            // Continue with deployment even if version check fails
+        }
+
+        // Step 2: Normal deployment confirmation
+        const confirmMsg = `Deploy ${this.selectedFiles.size} file(s)?\n\nThis will:\n` +
+            `${document.getElementById('clear-before-deploy').checked ? '• Delete existing files in target directory\n' : ''}` +
             `${document.getElementById('extract-zip').checked ? '• Extract ZIP files\n' : ''}` +
-            `• Upload selected artifacts`;
+            `• Upload to: ${customPrefix || 'Auto-parsed game directories'}`;
 
         if (!confirm(confirmMsg)) {
             return;
@@ -317,7 +757,7 @@ class DeploymentManager {
                     artifactKeys: Array.from(this.selectedFiles),
                     clearBefore: document.getElementById('clear-before-deploy').checked,
                     extractZip: document.getElementById('extract-zip').checked,
-                    targetPrefix: document.getElementById('target-prefix').value
+                    customPrefix: customPrefix
                 })
             });
 
@@ -328,14 +768,14 @@ class DeploymentManager {
                 setTimeout(() => {
                     deployStatus.style.display = 'none';
                 }, 5000);
-                this.showAlert(`Successfully deployed ${result.totalFiles} files!`, 'success');
+                window.toast.success(`Successfully deployed ${result.totalFiles} files!`);
             } else {
                 throw new Error(result.message || 'Deployment failed');
             }
         } catch (error) {
             console.error('Deployment error:', error);
             deployMessage.textContent = `Deployment failed: ${error.message}`;
-            this.showAlert('Deployment failed. Check console for details.', 'danger');
+            window.toast.error(`Deployment failed: ${error.message}`);
         } finally {
             deployBtn.disabled = false;
         }
@@ -360,13 +800,77 @@ class DeploymentManager {
             const result = await response.json();
 
             if (result.success) {
-                this.showAlert(`Deleted ${result.deletedCount} files from deploy bucket`, 'success');
+                window.toast.success(`Deleted ${result.deletedCount} files from deploy bucket`);
             } else {
                 throw new Error('Failed to clear deploy bucket');
             }
         } catch (error) {
             console.error('Error clearing deploy bucket:', error);
-            this.showAlert('Failed to clear deploy bucket', 'danger');
+            window.toast.error('Failed to clear deploy bucket');
+        }
+    }
+
+    async deleteSelected() {
+        if (this.selectedFiles.size === 0) {
+            window.toast.warning('Please select files to delete');
+            return;
+        }
+
+        const selectedArray = Array.from(this.selectedFiles);
+        const itemCount = selectedArray.length;
+
+        if (!confirm(`Are you sure you want to delete ${itemCount} selected item(s)?\n\nThis action cannot be undone!`)) {
+            return;
+        }
+
+        const deleteBtn = document.getElementById('delete-selected-btn');
+        const originalText = deleteBtn.innerHTML;
+
+        try {
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+
+            const response = await fetch('/api/artifacts/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    artifactKeys: selectedArray
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const totalSize = this.formatFileSize(result.totalSize);
+                window.toast.success(`Successfully deleted ${result.deleted} item(s) (${totalSize})`);
+
+                // Clear selection
+                this.selectedFiles.clear();
+
+                // Reload artifacts
+                await this.loadArtifacts(this.currentPrefix);
+            } else {
+                const message = result.failed > 0
+                    ? `Deleted ${result.deleted} items, but ${result.failed} failed`
+                    : 'Delete operation failed';
+
+                if (result.deleted > 0) {
+                    window.toast.warning(message);
+                } else {
+                    window.toast.error(message);
+                }
+
+                // Reload anyway to reflect any changes
+                await this.loadArtifacts(this.currentPrefix);
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            window.toast.error('Failed to delete selected items');
+        } finally {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = originalText;
         }
     }
 
@@ -376,24 +880,6 @@ class DeploymentManager {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    }
-
-    showAlert(message, type = 'info') {
-        // Create alert element
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-        alert.style.zIndex = '9999';
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        document.body.appendChild(alert);
-
-        // Auto dismiss after 5 seconds
-        setTimeout(() => {
-            alert.remove();
-        }, 5000);
     }
 }
 

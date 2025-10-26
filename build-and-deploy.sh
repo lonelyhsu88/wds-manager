@@ -24,10 +24,15 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Record start time
+START_TIME=$(date +%s)
+START_TIME_DISPLAY=$(date '+%Y-%m-%d %H:%M:%S')
+
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}WebUI Deployment System Manager${NC}"
 echo -e "${BLUE}Build and Deploy Script${NC}"
 echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}Start Time: ${START_TIME_DISPLAY}${NC}"
 echo ""
 
 # Function to print colored output
@@ -45,6 +50,30 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to calculate and display completion time
+show_completion_time() {
+    local END_TIME=$(date +%s)
+    local END_TIME_DISPLAY=$(date '+%Y-%m-%d %H:%M:%S')
+    local DURATION=$((END_TIME - START_TIME))
+    local HOURS=$((DURATION / 3600))
+    local MINUTES=$(((DURATION % 3600) / 60))
+    local SECONDS=$((DURATION % 60))
+
+    echo ""
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}Completion Time: ${END_TIME_DISPLAY}${NC}"
+
+    if [ $HOURS -gt 0 ]; then
+        echo -e "${BLUE}Total Duration: ${HOURS}h ${MINUTES}m ${SECONDS}s${NC}"
+    elif [ $MINUTES -gt 0 ]; then
+        echo -e "${BLUE}Total Duration: ${MINUTES}m ${SECONDS}s${NC}"
+    else
+        echo -e "${BLUE}Total Duration: ${SECONDS}s${NC}"
+    fi
+    echo -e "${BLUE}========================================${NC}"
+    echo ""
 }
 
 # Check if Docker is installed
@@ -170,7 +199,11 @@ if [ $? -eq 0 ]; then
         print_info "View logs: docker-compose logs -f wds-manager"
         print_info "Access UI: http://localhost:3000"
     fi
+
+    # Show completion time
+    show_completion_time
 else
     print_error "Build failed!"
+    show_completion_time
     exit 1
 fi

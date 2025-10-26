@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - WebUI Deployment System Manager</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-cloud-upload"></i> WebUI Deployment System Manager
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/index.html" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-house"></i> Home
+                </a>
+                <a href="/dashboard.html" class="btn btn-sm btn-light active">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="/deployments.html" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-clock-history"></i> History
+                </a>
+                <a href="/versions.html" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-tag"></i> Versions
+                </a>
+                <span class="badge bg-info text-dark" id="version-badge">v1.13.0</span>
+
+                <!-- User Info -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="" alt="" id="user-photo" class="rounded-circle"
+                             style="width: 24px; height: 24px; display: none;">
+                        <i class="bi bi-person-circle" id="user-icon"></i>
+                        <span id="user-name">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><h6 class="dropdown-header" id="user-email">user@example.com</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/auth/logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Deployments</h6>
+                                <h2 class="mb-0" id="total-deployments">-</h2>
+                                <small class="text-success" id="deployment-trend">
+                                    <i class="bi bi-arrow-up"></i> <span id="trend-value">-</span> this month
+                                </small>
+                            </div>
+                            <div class="stat-icon bg-primary bg-opacity-10">
+                                <i class="bi bi-rocket-takeoff fs-1 text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Success Rate</h6>
+                                <h2 class="mb-0" id="success-rate">-</h2>
+                                <small class="text-muted">
+                                    <span id="success-count">-</span> successful
+                                </small>
+                            </div>
+                            <div class="stat-icon bg-success bg-opacity-10">
+                                <i class="bi bi-check-circle fs-1 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Avg Deploy Time</h6>
+                                <h2 class="mb-0" id="avg-deploy-time">-</h2>
+                                <small class="text-muted">
+                                    Range: <span id="time-range">-</span>
+                                </small>
+                            </div>
+                            <div class="stat-icon bg-warning bg-opacity-10">
+                                <i class="bi bi-stopwatch fs-1 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Active Games</h6>
+                                <h2 class="mb-0" id="active-games">-</h2>
+                                <small class="text-muted">
+                                    Currently deployed
+                                </small>
+                            </div>
+                            <div class="stat-icon bg-info bg-opacity-10">
+                                <i class="bi bi-controller fs-1 text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i> Deployment Trend (Last 30 Days)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendChart" height="80"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart"></i> Success Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="successChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart"></i> Top 10 Deployed Games
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="topGamesChart" height="60"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & System Health -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-activity"></i> Recent Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-activity" class="list-group list-group-flush">
+                            <div class="text-center py-3">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-heart-pulse"></i> System Health
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="system-health">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Build Artifacts Bucket</span>
+                                    <span id="build-bucket-size" class="badge bg-secondary">-</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" role="progressbar"
+                                         style="width: 0%" id="build-bucket-bar"></div>
+                                </div>
+                                <small class="text-muted" id="build-bucket-count">- files</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Deploy WebUI Bucket</span>
+                                    <span id="deploy-bucket-size" class="badge bg-secondary">-</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                         style="width: 0%" id="deploy-bucket-bar"></div>
+                                </div>
+                                <small class="text-muted" id="deploy-bucket-count">- files</small>
+                            </div>
+                            <hr>
+                            <div class="mb-2">
+                                <strong>Recent Errors:</strong>
+                                <div id="recent-errors" class="mt-2">
+                                    <p class="text-success mb-0"><i class="bi bi-check-circle"></i> No recent errors</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <div>
+                                <strong>Uptime:</strong> <span id="uptime" class="text-success">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightning"></i> Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100 mb-2" onclick="location.href='/index.html'">
+                                    <i class="bi bi-hash"></i> Deploy Hash Games
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-success w-100 mb-2" onclick="location.href='/index.html'">
+                                    <i class="bi bi-grid-3x3-gap"></i> Deploy Bingo Games
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-info w-100 mb-2" onclick="location.href='/deployments.html'">
+                                    <i class="bi bi-clock-history"></i> View Full History
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-warning w-100 mb-2" id="download-audit-btn">
+                                    <i class="bi bi-download"></i> Download Audit Log
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Dashboard JS -->
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

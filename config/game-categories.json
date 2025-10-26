@@ -1,0 +1,140 @@
+{
+  "categories": {
+    "hash": {
+      "name": "Hash Games",
+      "icon": "bi-hash",
+      "color": "primary",
+      "games": [
+        "MultiPlayerAviator",
+        "MultiPlayerAviator2",
+        "MultiPlayerAviator2XIN",
+        "MultiPlayerCrash",
+        "MultiPlayerCrashCL",
+        "MultiPlayerCrashGR",
+        "MultiPlayerCrashNE",
+        "MultiPlayerMultiHilo",
+        "StandAloneDiamonds",
+        "StandAloneDice",
+        "StandAloneDragonTower",
+        "StandAloneEgyptHilo",
+        "StandAloneHilo",
+        "StandAloneHiloCL",
+        "StandAloneHiloGR",
+        "StandAloneHiloNE",
+        "StandAloneKeno",
+        "StandAloneLimbo",
+        "StandAloneLimboCL",
+        "StandAloneLimboGR",
+        "StandAloneLimboNE",
+        "StandAloneLuckyDropCOC",
+        "StandAloneLuckyDropCOC2",
+        "StandAloneLuckyDropGX",
+        "StandAloneLuckyDropOLY",
+        "StandAloneLuckyHilo",
+        "StandAloneMines",
+        "StandAloneMinesCA",
+        "StandAloneMinesCL",
+        "StandAloneMinesGR",
+        "StandAloneMinesMA",
+        "StandAloneMinesNE",
+        "StandAloneMinesPM",
+        "StandAloneMinesRaider",
+        "StandAloneMinesSC",
+        "StandAlonePlinko",
+        "StandAlonePlinkoCL",
+        "StandAlonePlinkoGR",
+        "StandAlonePlinkoNE",
+        "StandAloneVideoPoker",
+        "StandAloneWheel"
+      ]
+    },
+    "bingo": {
+      "name": "Bingo Games",
+      "icon": "bi-grid-3x3",
+      "color": "success",
+      "games": [
+        "ArcadeBingo",
+        "BonusBingo",
+        "CaribbeanBingo",
+        "CaveBingo",
+        "EggHuntBingo",
+        "LostRuins",
+        "MagicBingo",
+        "MapleBingo",
+        "OdinBingo",
+        "Steampunk",
+        "Steampunk2"
+      ]
+    },
+    "arcade": {
+      "name": "Arcade Games",
+      "icon": "bi-joystick",
+      "color": "warning",
+      "games": [
+        "MultiPlayerBoomersGR",
+        "StandAloneForestTeaParty",
+        "StandAloneWildDigGR",
+        "StandAloneGoldenClover"
+      ]
+    },
+    "resources": {
+      "name": "Resources",
+      "icon": "bi-box-seam",
+      "color": "info",
+      "games": [
+        "i18n",
+        "bundle-i18n",
+        "bundle-common",
+        "game-webview",
+        "bundle-common-freeBonus",
+        "game-configs"
+      ]
+    },
+    "dashboard": {
+      "name": "Dashboard",
+      "icon": "bi-speedometer2",
+      "color": "danger",
+      "games": [
+        "gemini-dashboard"
+      ]
+    },
+    "event": {
+      "name": "Event",
+      "icon": "bi-calendar-event",
+      "color": "purple",
+      "games": [
+        "event"
+      ]
+    },
+    "jump-page": {
+      "name": "Jump Page",
+      "icon": "bi-box-arrow-up-right",
+      "color": "teal",
+      "games": [
+        "jump-page"
+      ]
+    },
+    "game-demo": {
+      "name": "Game Demo",
+      "icon": "bi-controller",
+      "color": "indigo",
+      "games": [
+        "GameDemo"
+      ]
+    },
+    "ex-mgmt": {
+      "name": "External Management",
+      "icon": "bi-gear",
+      "color": "dark",
+      "games": [
+        "ex-mgmt"
+      ]
+    },
+    "other": {
+      "name": "Other",
+      "icon": "bi-folder",
+      "color": "secondary",
+      "games": []
+    }
+  }
+}
