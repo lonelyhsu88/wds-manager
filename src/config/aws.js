@@ -37,7 +37,7 @@ const s3 = new AWS.S3({
   }
 });
 
-// Bucket configuration
+// Bucket configuration (defaults)
 const buckets = {
   buildArtifacts: process.env.BUILD_ARTIFACTS_BUCKET || 'build-artifacts-bucket',
   deployWebUI: process.env.DEPLOY_WEBUI_BUCKET || 'deploy-webui-bucket'
@@ -50,9 +50,25 @@ const uploadConfig = {
   queueSize: uploadConcurrency
 };
 
+/**
+ * Get bucket names with optional overrides from request
+ * @param {Object} req - Express request object (optional)
+ * @returns {Object} Bucket configuration
+ */
+function getBuckets(req = null) {
+  if (req && req.customBuckets) {
+    return {
+      buildArtifacts: req.customBuckets.build || buckets.buildArtifacts,
+      deployWebUI: req.customBuckets.deploy || buckets.deployWebUI
+    };
+  }
+  return buckets;
+}
+
 module.exports = {
   s3,
   buckets,
+  getBuckets,
   uploadConfig,
   AWS
 };

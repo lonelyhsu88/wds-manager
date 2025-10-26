@@ -1,6 +1,89 @@
 {
-  "version": "1.13.0",
+  "version": "1.16.3",
   "history": [
+    {
+      "version": "1.16.3",
+      "date": "2025-10-27",
+      "changes": [
+        "CRITICAL FIX: Frontend now sends custom bucket headers in deployment requests",
+        "Added custom bucket headers to /api/deploy POST request",
+        "Added custom bucket headers to /api/check-versions POST request",
+        "Added custom bucket headers to /api/clear-deploy POST request",
+        "Added custom bucket headers to /api/artifacts/delete POST request",
+        "Frontend getCustomBucketHeaders() now properly used for all deployment operations",
+        "Deployment now ACTUALLY uses custom build bucket (v1.16.2 backend fix + v1.16.3 frontend fix)",
+        "Complete end-to-end custom bucket selection now fully functional"
+      ]
+    },
+    {
+      "version": "1.16.2",
+      "date": "2025-10-27",
+      "changes": [
+        "Fixed deployment failures with custom bucket selection (Backend only)",
+        "Updated s3Service.getArtifact() to accept req parameter and use dynamic buckets",
+        "Updated s3Service.getArtifactFileList() to accept req parameter",
+        "Updated deployService.deploy() to accept and pass req to s3Service methods",
+        "Updated /api/deploy route to pass req object to deployService",
+        "Updated /api/artifacts/files route to pass req object to s3Service",
+        "Deployment now correctly uses custom build bucket when selected",
+        "NOTE: Frontend was not sending headers - fixed in v1.16.3"
+      ]
+    },
+    {
+      "version": "1.16.1",
+      "date": "2025-10-27",
+      "changes": [
+        "Fixed critical bug: S3Service now properly uses custom buckets from session",
+        "Updated listBuildArtifacts() to accept req parameter and use getBuckets()",
+        "Updated /api/check-access to use dynamic bucket selection",
+        "Updated /api/artifacts to pass req object to s3Service",
+        "Custom bucket selection now works correctly"
+      ]
+    },
+    {
+      "version": "1.16.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Enhanced bucket selector with dropdown list of all available S3 buckets",
+        "Added GET /api/list-buckets endpoint to retrieve all S3 buckets",
+        "Replaced manual text input with searchable dropdown selector",
+        "Added bucket filter input for quick search through bucket list",
+        "Buckets are sorted alphabetically in dropdown",
+        "Default buckets marked with (default) label in dropdown",
+        "Shows total bucket count and creation dates",
+        "Improved UX: users can now select from existing buckets instead of typing names",
+        "Filter updates dropdown in real-time as user types"
+      ]
+    },
+    {
+      "version": "1.15.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Added dynamic S3 bucket selector functionality",
+        "Users can now change Build Artifacts and Deploy WebUI buckets on-the-fly",
+        "Added bucket edit buttons on main page bucket status cards",
+        "Created bucket selector modal with validation and default bucket info",
+        "Implemented bucketOverride middleware for request-level bucket override",
+        "Added getBuckets() helper function in AWS config",
+        "Custom buckets stored in sessionStorage (temporary, resets on page refresh)",
+        "Updated frontend to send X-Custom-Build-Bucket and X-Custom-Deploy-Bucket headers",
+        "Bucket changes apply immediately with automatic page reload",
+        "Default buckets: jenkins-build-artfs (build), deploy-webui-bucket (deploy)"
+      ]
+    },
+    {
+      "version": "1.14.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Fixed category display for all 9 game categories in main view",
+        "Updated versions.html to support resources, dashboard, event, jump-page, game-demo, ex-mgmt categories",
+        "Implemented prefix matching for event category (event-b, event-k auto-classified as Event)",
+        "Updated app.js getCategoryIcon() and getCategoryColor() with all 9 categories",
+        "Updated categoryOrder in renderCategoryView() and renderCardView()",
+        "Added custom CSS badge colors: bg-purple, bg-teal, bg-indigo",
+        "Jump Page and Game Demo now properly show item counts in UI"
+      ]
+    },
     {
       "version": "1.13.0",
       "date": "2025-10-27",
@@ -278,6 +361,1271 @@
     }
   ],
   "deployments": [
+    {
+      "version": "1.16.3",
+      "timestamp": "2025-10-26T18:07:18.371Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 19538,
+      "status": "success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.3",
+      "timestamp": "2025-10-26T18:07:18.369Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 19538,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.3",
+      "timestamp": "2025-10-26T18:02:38.836Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 497,
+      "status": "success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.3",
+      "timestamp": "2025-10-26T18:02:38.834Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 497,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:58:23.168Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:58:23.165Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "i18n-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:57:52.695Z",
+      "artifactKeys": [
+        "20251009/jump-page-prd-1.0.20.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 64,
+      "status": "success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:57:52.693Z",
+      "artifactKeys": [
+        "20251009/jump-page-prd-1.0.20.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 64,
+      "status": "success",
+      "errors": [],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:57:18.326Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.2",
+      "timestamp": "2025-10-26T17:57:18.324Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "i18n-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:50:39.119Z",
+      "artifactKeys": [
+        "bundle-i18n-prd-1.0.18.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:50:39.114Z",
+      "artifactKeys": [
+        "bundle-i18n-prd-1.0.18.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "bundle-i18n-prd-1.0.18.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:50:19.922Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:50:19.914Z",
+      "artifactKeys": [
+        "i18n-prd-1.0.26.zip"
+      ],
+      "artifactsCount": 1,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "i18n-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:49:22.168Z",
+      "artifactKeys": [
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:49:22.166Z",
+      "artifactKeys": [
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "MultiPlayerCrashGR-prd-1.0.17.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrashCL-prd-1.0.38.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrash-prd-1.0.57.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrashNE-prd-1.0.20.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoGR-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator2-prd-1.0.7.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneWheel-prd-1.0.53.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator-prd-1.0.27.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoNE-prd-1.0.19.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoCL-prd-1.0.32.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesRaider-prd-1.0.13.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinko-prd-1.0.50.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesSC-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesPM-prd-1.0.10.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesNE-prd-1.0.22.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesGR-prd-1.0.18.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesCA-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesMA-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMines-prd-1.0.68.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneKeno-prd-1.0.51.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDice-prd-1.0.59.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDragonTower-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "i18n-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-i18n-prd-1.0.18.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "game-webview-prd-1.0.11.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "jump-page-prd-1.0.21.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-common-freeBonus-prd-1.0.5.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "gemini-dashboard-prd-1.0.25.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "ex-mgmt-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-common-prd-1.2.10.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesCL-prd-1.0.35.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneWildDigGR-prd-1.0.3.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneGoldenClover-prd-1.0.1.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneForestTeaParty-prd-1.0.5.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "GameDemo-prd-1.0.39.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MagicBingo-prd-1.0.41.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneEgyptHilo-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MagicBingo-prd-1.0.40.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "game-configs-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "Steampunk-prd-1.0.56.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "Steampunk2-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneVideoPoker-prd-1.0.44.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyHilo-prd-1.0.12.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropGX-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerBoomersGR-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboGR-prd-1.0.15.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboCL-prd-1.0.29.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboNE-prd-1.0.20.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimbo-prd-1.0.52.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloGR-prd-1.0.16.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloNE-prd-1.0.21.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHilo-prd-1.0.51.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDiamonds-prd-1.0.48.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerMultiHilo-prd-1.0.24.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "OdinBingo-prd-1.0.61.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MapleBingo-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "LostRuins-prd-1.0.52.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloCL-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "CaribbeanBingo-prd-1.0.67.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "BonusBingo-prd-1.0.19.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "EggHuntBingo-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "ArcadeBingo-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "event-prd-1.0.1.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "CaveBingo-prd-1.0.57.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:48:41.059Z",
+      "artifactKeys": [
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "isRollback": false,
+      "user": "lonely.h@jvd.tw",
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
+    {
+      "version": "1.16.1",
+      "timestamp": "2025-10-26T17:48:41.053Z",
+      "artifactKeys": [
+        "MultiPlayerCrashNE-prd-1.0.20.zip",
+        "MultiPlayerCrashGR-prd-1.0.17.zip",
+        "MultiPlayerCrashCL-prd-1.0.38.zip",
+        "MultiPlayerCrash-prd-1.0.57.zip",
+        "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+        "MultiPlayerAviator2-prd-1.0.7.zip",
+        "MultiPlayerAviator-prd-1.0.27.zip",
+        "StandAloneWheel-prd-1.0.53.zip",
+        "StandAlonePlinkoNE-prd-1.0.19.zip",
+        "StandAlonePlinkoGR-prd-1.0.14.zip",
+        "StandAlonePlinkoCL-prd-1.0.32.zip",
+        "StandAlonePlinko-prd-1.0.50.zip",
+        "StandAloneMinesSC-prd-1.0.6.zip",
+        "StandAloneMinesRaider-prd-1.0.13.zip",
+        "StandAloneMinesPM-prd-1.0.10.zip",
+        "StandAloneMinesNE-prd-1.0.22.zip",
+        "StandAloneMinesMA-prd-1.0.14.zip",
+        "StandAloneMinesGR-prd-1.0.18.zip",
+        "StandAloneMinesCL-prd-1.0.35.zip",
+        "StandAloneMinesCA-prd-1.0.8.zip",
+        "StandAloneMines-prd-1.0.68.zip",
+        "StandAloneKeno-prd-1.0.51.zip",
+        "StandAloneDragonTower-prd-1.0.8.zip",
+        "StandAloneDice-prd-1.0.59.zip",
+        "i18n-prd-1.0.26.zip",
+        "bundle-i18n-prd-1.0.18.zip",
+        "jump-page-prd-1.0.21.zip",
+        "game-webview-prd-1.0.11.zip",
+        "bundle-common-freeBonus-prd-1.0.5.zip",
+        "gemini-dashboard-prd-1.0.25.zip",
+        "ex-mgmt-prd-1.0.14.zip",
+        "bundle-common-prd-1.2.10.zip",
+        "StandAloneWildDigGR-prd-1.0.3.zip",
+        "StandAloneGoldenClover-prd-1.0.1.zip",
+        "StandAloneForestTeaParty-prd-1.0.5.zip",
+        "StandAloneEgyptHilo-prd-1.0.8.zip",
+        "MultiPlayerBoomersGR-prd-1.0.8.zip",
+        "GameDemo-prd-1.0.39.zip",
+        "MagicBingo-prd-1.0.41.zip",
+        "MagicBingo-prd-1.0.40.zip",
+        "game-configs-prd-1.0.4.zip",
+        "Steampunk2-prd-1.0.4.zip",
+        "Steampunk-prd-1.0.56.zip",
+        "StandAloneVideoPoker-prd-1.0.44.zip",
+        "StandAloneLuckyHilo-prd-1.0.12.zip",
+        "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+        "StandAloneLuckyDropGX-prd-1.0.6.zip",
+        "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+        "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+        "StandAloneLimboNE-prd-1.0.20.zip",
+        "StandAloneLimboGR-prd-1.0.15.zip",
+        "StandAloneLimboCL-prd-1.0.29.zip",
+        "StandAloneLimbo-prd-1.0.52.zip",
+        "StandAloneHiloNE-prd-1.0.21.zip",
+        "StandAloneHiloGR-prd-1.0.16.zip",
+        "StandAloneHiloCL-prd-1.0.26.zip",
+        "StandAloneHilo-prd-1.0.51.zip",
+        "StandAloneDiamonds-prd-1.0.48.zip",
+        "OdinBingo-prd-1.0.61.zip",
+        "MultiPlayerMultiHilo-prd-1.0.24.zip",
+        "MapleBingo-prd-1.0.14.zip",
+        "LostRuins-prd-1.0.52.zip",
+        "EggHuntBingo-prd-1.0.6.zip",
+        "CaveBingo-prd-1.0.57.zip",
+        "CaribbeanBingo-prd-1.0.67.zip",
+        "BonusBingo-prd-1.0.19.zip",
+        "ArcadeBingo-prd-1.0.8.zip",
+        "event-prd-1.0.1.zip"
+      ],
+      "artifactsCount": 68,
+      "filesDeployed": 0,
+      "status": "partial_success",
+      "errors": [
+        {
+          "artifact": "MultiPlayerCrash-prd-1.0.57.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrashNE-prd-1.0.20.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrashCL-prd-1.0.38.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator2XIN-prd-1.0.3.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator2-prd-1.0.7.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerAviator-prd-1.0.27.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoNE-prd-1.0.19.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoGR-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinko-prd-1.0.50.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAlonePlinkoCL-prd-1.0.32.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneWheel-prd-1.0.53.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerCrashGR-prd-1.0.17.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesSC-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesRaider-prd-1.0.13.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesNE-prd-1.0.22.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesMA-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesPM-prd-1.0.10.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesGR-prd-1.0.18.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneKeno-prd-1.0.51.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesCA-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMinesCL-prd-1.0.35.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDragonTower-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneMines-prd-1.0.68.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "i18n-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDice-prd-1.0.59.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "jump-page-prd-1.0.21.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-common-freeBonus-prd-1.0.5.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "gemini-dashboard-prd-1.0.25.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "ex-mgmt-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-common-prd-1.2.10.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneWildDigGR-prd-1.0.3.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneGoldenClover-prd-1.0.1.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneForestTeaParty-prd-1.0.5.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "bundle-i18n-prd-1.0.18.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneEgyptHilo-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerBoomersGR-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "game-webview-prd-1.0.11.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "GameDemo-prd-1.0.39.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MagicBingo-prd-1.0.40.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "game-configs-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "Steampunk2-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "Steampunk-prd-1.0.56.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneVideoPoker-prd-1.0.44.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyHilo-prd-1.0.12.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MagicBingo-prd-1.0.41.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropOLY-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropCOC-prd-1.0.13.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboNE-prd-1.0.20.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboGR-prd-1.0.15.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloNE-prd-1.0.21.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimbo-prd-1.0.52.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloGR-prd-1.0.16.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropGX-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLuckyDropCOC2-prd-1.0.4.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHilo-prd-1.0.51.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneDiamonds-prd-1.0.48.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "OdinBingo-prd-1.0.61.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneLimboCL-prd-1.0.29.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MapleBingo-prd-1.0.14.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "MultiPlayerMultiHilo-prd-1.0.24.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "LostRuins-prd-1.0.52.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "EggHuntBingo-prd-1.0.6.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "StandAloneHiloCL-prd-1.0.26.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "CaveBingo-prd-1.0.57.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "CaribbeanBingo-prd-1.0.67.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "BonusBingo-prd-1.0.19.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "event-prd-1.0.1.zip",
+          "error": "The specified key does not exist."
+        },
+        {
+          "artifact": "ArcadeBingo-prd-1.0.8.zip",
+          "error": "The specified key does not exist."
+        }
+      ],
+      "options": {
+        "clearBefore": true,
+        "extractZip": true,
+        "customPrefix": ""
+      }
+    },
     {
       "version": "1.13.0",
       "timestamp": "2025-10-26T16:32:34.115Z",
@@ -734,38 +2082,6 @@
       "timestamp": "2025-10-26T06:27:56.776Z",
       "artifactsCount": 10,
       "filesDeployed": 6734,
-      "status": "success",
-      "errors": []
-    },
-    {
-      "version": "1.1.0",
-      "timestamp": "2025-10-25T17:23:36.111Z",
-      "artifactsCount": 3,
-      "filesDeployed": 1125,
-      "status": "success",
-      "errors": []
-    },
-    {
-      "version": "1.0.1",
-      "timestamp": "2025-10-25T17:15:00.633Z",
-      "artifactsCount": 3,
-      "filesDeployed": 5109,
-      "status": "success",
-      "errors": []
-    },
-    {
-      "version": "1.0.1",
-      "timestamp": "2025-10-25T17:12:40.568Z",
-      "artifactsCount": 1,
-      "filesDeployed": 133,
-      "status": "success",
-      "errors": []
-    },
-    {
-      "version": "1.0.1",
-      "timestamp": "2025-10-25T17:12:12.302Z",
-      "artifactsCount": 1,
-      "filesDeployed": 1790,
       "status": "success",
       "errors": []
     }

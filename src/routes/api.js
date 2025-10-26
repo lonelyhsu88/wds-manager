@@ -9,6 +9,7 @@ const auditLogger = require('../utils/auditLogger');
 const gameCategories = require('../utils/gameCategories');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { deployLimiter } = require('../middleware/rateLimit');
+const bucketOverride = require('../middleware/bucketOverride');
 const {
   validateDeploy,
   validateClearDeploy,
@@ -17,6 +18,9 @@ const {
   validateDeployedQuery,
   validateDeleteArtifacts
 } = require('../middleware/validation');
+
+// Apply bucket override middleware to all routes
+router.use(bucketOverride);
 
 // Health check
 router.get('/health', (req, res) => {
@@ -57,18 +61,19 @@ router.get('/version', async (req, res) => {
 // Check bucket access (requires authentication)
 router.get('/check-access', ensureAuthenticated, async (req, res) => {
   try {
-    const { s3, buckets } = require('../config/aws');
+    const { getBuckets } = require('../config/aws');
+    const activeBuckets = getBuckets(req);
 
-    const buildAccess = await s3Service.checkBucketAccess(buckets.buildArtifacts);
-    const deployAccess = await s3Service.checkBucketAccess(buckets.deployWebUI);
+    const buildAccess = await s3Service.checkBucketAccess(activeBuckets.buildArtifacts);
+    const deployAccess = await s3Service.checkBucketAccess(activeBuckets.deployWebUI);
 
     res.json({
       buildArtifactsBucket: {
-        name: buckets.buildArtifacts,
+        name: activeBuckets.buildArtifacts,
         accessible: buildAccess
       },
       deployWebUIBucket: {
-        name: buckets.deployWebUI,
+        name: activeBuckets.deployWebUI,
         accessible: deployAccess
       }
     });
@@ -78,11 +83,47 @@ router.get('/check-access', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// List all S3 buckets (requires authentication)
+router.get('/list-buckets', ensureAuthenticated, async (req, res) => {
+  try {
+    const { s3, buckets } = require('../config/aws');
+
+    logger.info(`Listing all S3 buckets for user: ${req.user?.email}`);
+
+    // List all buckets
+    const data = await s3.listBuckets().promise();
+
+    // Sort buckets alphabetically
+    const bucketList = (data.Buckets || [])
+      .map(bucket => ({
+        name: bucket.Name,
+        creationDate: bucket.CreationDate,
+        isDefault: bucket.Name === buckets.buildArtifacts || bucket.Name === buckets.deployWebUI
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    res.json({
+      buckets: bucketList,
+      totalCount: bucketList.length,
+      defaultBuckets: {
+        build: buckets.buildArtifacts,
+        deploy: buckets.deployWebUI
+      }
+    });
+  } catch (error) {
+    logger.error('Error listing S3 buckets:', error);
+    res.status(500).json({
+      error: 'Failed to list S3 buckets',
+      message: error.message
+    });
+  }
+});
+
 // List build artifacts (requires authentication + validation)
 router.get('/artifacts', validateArtifactsQuery, ensureAuthenticated, async (req, res) => {
   try {
     const { prefix = '', categorize = 'false' } = req.query;
-    const result = await s3Service.listBuildArtifacts(prefix);
+    const result = await s3Service.listBuildArtifacts(prefix, req);
 
     // If categorize flag is set, return categorized data
     if (categorize === 'true') {
@@ -182,7 +223,7 @@ router.post('/deploy', validateDeploy, deployLimiter, ensureAuthenticated, async
     }, (progress) => {
       // Emit progress to all connected clients
       io.emit('deployProgress', progress);
-    });
+    }, req);
 
     const duration = Date.now() - startTime;
 
@@ -430,7 +471,7 @@ router.get('/artifacts/files', ensureAuthenticated, async (req, res) => {
 
     logger.info(`Artifact file list requested for ${key} by ${req.user?.email}`);
 
-    const files = await s3Service.getArtifactFileList(key);
+    const files = await s3Service.getArtifactFileList(key, req);
 
     res.json({ files });
   } catch (error) {

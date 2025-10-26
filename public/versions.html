@@ -315,6 +315,12 @@
                     hash: { name: 'Hash Games', icon: 'bi-hash', color: 'primary', games: [] },
                     bingo: { name: 'Bingo Games', icon: 'bi-grid-3x3', color: 'success', games: [] },
                     arcade: { name: 'Arcade Games', icon: 'bi-joystick', color: 'warning', games: [] },
+                    resources: { name: 'Resources', icon: 'bi-box-seam', color: 'info', games: [] },
+                    dashboard: { name: 'Dashboard', icon: 'bi-speedometer2', color: 'danger', games: [] },
+                    event: { name: 'Event', icon: 'bi-calendar-event', color: 'purple', games: [] },
+                    'jump-page': { name: 'Jump Page', icon: 'bi-box-arrow-up-right', color: 'teal', games: [] },
+                    'game-demo': { name: 'Game Demo', icon: 'bi-controller', color: 'indigo', games: [] },
+                    'ex-mgmt': { name: 'External Management', icon: 'bi-gear', color: 'dark', games: [] },
                     other: { name: 'Other', icon: 'bi-folder', color: 'secondary', games: [] },
                     uncategorized: { name: 'Uncategorized', icon: 'bi-question-circle', color: 'secondary', games: [] }
                 };
@@ -334,7 +340,7 @@
                 let accordionIndex = 0;
 
                 // Define category order
-                const categoryOrder = ['hash', 'bingo', 'arcade', 'other', 'uncategorized'];
+                const categoryOrder = ['hash', 'bingo', 'arcade', 'resources', 'dashboard', 'event', 'jump-page', 'game-demo', 'ex-mgmt', 'other', 'uncategorized'];
 
                 categoryOrder.forEach(categoryKey => {
                     const category = categorized[categoryKey];

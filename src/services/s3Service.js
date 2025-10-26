@@ -1,4 +1,4 @@
-const { s3, buckets, uploadConfig } = require('../config/aws');
+const { s3, buckets, getBuckets, uploadConfig } = require('../config/aws');
 const logger = require('../utils/logger');
 const versionParser = require('../utils/versionParser');
 const gameCategories = require('../utils/gameCategories');
@@ -7,11 +7,13 @@ class S3Service {
   /**
    * List directories and files in build artifacts bucket
    * @param {string} prefix - The prefix (directory) to list
+   * @param {Object} req - Express request object (optional, for custom buckets)
    */
-  async listBuildArtifacts(prefix = '') {
+  async listBuildArtifacts(prefix = '', req = null) {
     try {
+      const activeBuckets = getBuckets(req);
       const params = {
-        Bucket: buckets.buildArtifacts,
+        Bucket: activeBuckets.buildArtifacts,
         Prefix: prefix,
         Delimiter: '/'
       };
@@ -56,11 +58,13 @@ class S3Service {
   /**
    * Get object from build artifacts bucket
    * @param {string} key - The S3 key
+   * @param {Object} req - Express request object (optional, for custom buckets)
    */
-  async getArtifact(key) {
+  async getArtifact(key, req = null) {
     try {
+      const activeBuckets = getBuckets(req);
       const params = {
-        Bucket: buckets.buildArtifacts,
+        Bucket: activeBuckets.buildArtifacts,
         Key: key
       };
 
@@ -75,13 +79,14 @@ class S3Service {
   /**
    * Get file list from an artifact ZIP file
    * @param {string} key - The S3 key of the ZIP artifact
+   * @param {Object} req - Express request object (optional, for custom buckets)
    */
-  async getArtifactFileList(key) {
+  async getArtifactFileList(key, req = null) {
     try {
       const AdmZip = require('adm-zip');
 
       // Download the artifact
-      const zipData = await this.getArtifact(key);
+      const zipData = await this.getArtifact(key, req);
 
       // Parse ZIP
       const zip = new AdmZip(zipData);

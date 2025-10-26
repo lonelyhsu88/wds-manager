@@ -1,6 +1,6 @@
 {
   "name": "webui-deployment-system-manager",
-  "version": "1.13.0",
+  "version": "1.16.3",
   "description": "WebUI Deployment System Manager - Deploy artifacts from build bucket to webui bucket",
   "main": "src/app.js",
   "scripts": {

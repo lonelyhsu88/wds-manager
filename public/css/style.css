@@ -946,3 +946,19 @@ body {
         display: none;
     }
 }
+
+/* Custom Badge Colors for New Categories */
+.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white !important;
+}
+
+.bg-teal {
+    background-color: #20c997 !important;
+    color: white !important;
+}
+
+.bg-indigo {
+    background-color: #6610f2 !important;
+    color: white !important;
+}

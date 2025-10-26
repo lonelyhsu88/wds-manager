@@ -22,12 +22,13 @@ function loadCategories() {
 
 /**
  * Get category for a game name
- * @param {string} gameName - Game name (e.g., "MultiPlayerAviator")
+ * @param {string} gameName - Game name (e.g., "MultiPlayerAviator", "event-b", "event-k")
  * @returns {object} Category info { key, name, icon, color } or null
  */
 function getCategoryForGame(gameName) {
   const data = loadCategories();
 
+  // First, try exact match
   for (const [key, category] of Object.entries(data.categories)) {
     if (category.games.includes(gameName)) {
       return {
@@ -35,6 +36,20 @@ function getCategoryForGame(gameName) {
         name: category.name,
         icon: category.icon,
         color: category.color
+      };
+    }
+  }
+
+  // Second, try prefix matching for special categories
+  // Match "event-b", "event-k", etc. to "event" category
+  if (gameName.startsWith('event-')) {
+    const eventCategory = data.categories.event;
+    if (eventCategory) {
+      return {
+        key: 'event',
+        name: eventCategory.name,
+        icon: eventCategory.icon,
+        color: eventCategory.color
       };
     }
   }

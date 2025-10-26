@@ -117,8 +117,9 @@ class DeployService {
    * @param {Array<string>} artifactKeys - List of artifact keys to deploy
    * @param {object} options - Deployment options
    * @param {function} progressCallback - Callback for progress updates
+   * @param {Object} req - Express request object (optional, for custom buckets)
    */
-  async deploy(artifactKeys, options = {}, progressCallback = null) {
+  async deploy(artifactKeys, options = {}, progressCallback = null, req = null) {
     const {
       clearBefore = true,
       extractZip = true,
@@ -227,7 +228,7 @@ class DeployService {
             });
 
             // Download artifact
-            const artifactData = await s3Service.getArtifact(artifactKey);
+            const artifactData = await s3Service.getArtifact(artifactKey, req);
 
             // Check if it's a zip file
             const isZip = artifactKey.endsWith('.zip');

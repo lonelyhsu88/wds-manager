@@ -18,6 +18,22 @@ class DeploymentManager {
         this.init();
     }
 
+    // Get custom bucket headers from sessionStorage
+    getCustomBucketHeaders() {
+        const headers = {};
+        const customBuildBucket = sessionStorage.getItem('customBuildBucket');
+        const customDeployBucket = sessionStorage.getItem('customDeployBucket');
+
+        if (customBuildBucket) {
+            headers['X-Custom-Build-Bucket'] = customBuildBucket;
+        }
+        if (customDeployBucket) {
+            headers['X-Custom-Deploy-Bucket'] = customDeployBucket;
+        }
+
+        return headers;
+    }
+
     init() {
         this.loadUserInfo();
         this.setupEventListeners();
@@ -141,11 +157,31 @@ class DeploymentManager {
             this.loadVersionHistory();
         });
 
+        // Bucket selector buttons
+        document.getElementById('change-build-bucket-btn').addEventListener('click', () => {
+            this.showBucketSelector('build');
+        });
+
+        document.getElementById('change-deploy-bucket-btn').addEventListener('click', () => {
+            this.showBucketSelector('deploy');
+        });
+
+        // Bucket selector modal handlers
+        document.getElementById('use-default-bucket-btn').addEventListener('click', () => {
+            this.useDefaultBucket();
+        });
+
+        document.getElementById('apply-bucket-btn').addEventListener('click', () => {
+            this.applyBucketChange();
+        });
+
     }
 
     async checkBucketAccess() {
         try {
-            const response = await fetch('/api/check-access');
+            const response = await fetch('/api/check-access', {
+                headers: this.getCustomBucketHeaders()
+            });
             const data = await response.json();
 
             // Build artifacts bucket
@@ -257,7 +293,9 @@ class DeploymentManager {
 
         try {
             const categorizeParam = (this.viewMode === 'category' || this.viewMode === 'card') ? '&categorize=true' : '';
-            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}${categorizeParam}`);
+            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}${categorizeParam}`, {
+                headers: this.getCustomBucketHeaders()
+            });
             const data = await response.json();
 
             this.currentPrefix = prefix;
@@ -344,6 +382,12 @@ class DeploymentManager {
             'Hash Games': 'bi-hash',
             'Bingo Games': 'bi-grid-3x3-gap-fill',
             'Arcade Games': 'bi-joystick',
+            'Resources': 'bi-box-seam',
+            'Dashboard': 'bi-speedometer2',
+            'Event': 'bi-calendar-event',
+            'Jump Page': 'bi-box-arrow-up-right',
+            'Game Demo': 'bi-controller',
+            'External Management': 'bi-gear',
             'Other': 'bi-collection'
         };
         return icons[categoryName] || 'bi-folder';
@@ -354,6 +398,12 @@ class DeploymentManager {
             'Hash Games': 'primary',
             'Bingo Games': 'success',
             'Arcade Games': 'warning',
+            'Resources': 'info',
+            'Dashboard': 'danger',
+            'Event': 'purple',
+            'Jump Page': 'teal',
+            'Game Demo': 'indigo',
+            'External Management': 'dark',
             'Other': 'secondary'
         };
         return colors[categoryName] || 'secondary';
@@ -371,8 +421,8 @@ class DeploymentManager {
         let html = '';
         let index = 0;
 
-        // Order categories: Hash Games, Bingo Games, Arcade Games, Other
-        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Other'];
+        // Order categories: Hash Games, Bingo Games, Arcade Games, Resources, Dashboard, Event, Jump Page, Game Demo, External Management, Other
+        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Resources', 'Dashboard', 'Event', 'Jump Page', 'Game Demo', 'External Management', 'Other'];
         const sortedCategories = categoryOrder.filter(cat => categories[cat]);
 
         sortedCategories.forEach(categoryName => {
@@ -476,9 +526,9 @@ class DeploymentManager {
     
         let html = '';
     
-        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Other'];
+        const categoryOrder = ['Hash Games', 'Bingo Games', 'Arcade Games', 'Resources', 'Dashboard', 'Event', 'Jump Page', 'Game Demo', 'External Management', 'Other'];
         const sortedCategories = categoryOrder.filter(cat => categories[cat]);
-    
+
         sortedCategories.forEach(categoryName => {
             const games = categories[categoryName];
             const categoryClass = categoryName.toLowerCase().replace(' ', '-');
@@ -700,7 +750,8 @@ class DeploymentManager {
             const versionCheckResponse = await fetch('/api/check-versions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...this.getCustomBucketHeaders()
                 },
                 body: JSON.stringify({
                     artifactKeys: Array.from(this.selectedFiles)
@@ -751,7 +802,8 @@ class DeploymentManager {
             const response = await fetch('/api/deploy', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...this.getCustomBucketHeaders()
                 },
                 body: JSON.stringify({
                     artifactKeys: Array.from(this.selectedFiles),
@@ -790,7 +842,8 @@ class DeploymentManager {
             const response = await fetch('/api/clear-deploy', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...this.getCustomBucketHeaders()
                 },
                 body: JSON.stringify({
                     prefix: document.getElementById('target-prefix').value
@@ -833,7 +886,8 @@ class DeploymentManager {
             const response = await fetch('/api/artifacts/delete', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...this.getCustomBucketHeaders()
                 },
                 body: JSON.stringify({
                     artifactKeys: selectedArray
@@ -880,6 +934,168 @@ class DeploymentManager {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Bucket Selector Methods
+
+    async showBucketSelector(type) {
+        // type: 'build' or 'deploy'
+        this.currentBucketType = type;
+
+        const modal = new bootstrap.Modal(document.getElementById('bucketSelectorModal'));
+        const titleEl = document.getElementById('bucketSelectorTitle');
+        const selectEl = document.getElementById('bucket-name-select');
+        const defaultNameEl = document.getElementById('default-bucket-name');
+        const filterInput = document.getElementById('bucket-filter-input');
+
+        // Reset filter
+        filterInput.value = '';
+
+        try {
+            // Load bucket list and default info
+            const [accessResponse, bucketsResponse] = await Promise.all([
+                fetch('/api/check-access', { headers: this.getCustomBucketHeaders() }),
+                fetch('/api/list-buckets', { headers: this.getCustomBucketHeaders() })
+            ]);
+
+            const accessData = await accessResponse.json();
+            const bucketsData = await bucketsResponse.json();
+
+            // Set title and default bucket
+            if (type === 'build') {
+                titleEl.textContent = 'Change Build Artifacts Bucket';
+                defaultNameEl.textContent = accessData.buildArtifactsBucket.name;
+                this.defaultBuildBucket = accessData.buildArtifactsBucket.name;
+            } else {
+                titleEl.textContent = 'Change Deploy WebUI Bucket';
+                defaultNameEl.textContent = accessData.deployWebUIBucket.name;
+                this.defaultDeployBucket = accessData.deployWebUIBucket.name;
+            }
+
+            // Populate dropdown with all buckets
+            this.populateBucketDropdown(bucketsData.buckets, type);
+
+            // Set current selection
+            const currentBucket = type === 'build'
+                ? (sessionStorage.getItem('customBuildBucket') || accessData.buildArtifactsBucket.name)
+                : (sessionStorage.getItem('customDeployBucket') || accessData.deployWebUIBucket.name);
+            selectEl.value = currentBucket;
+
+            // Setup filter
+            this.setupBucketFilter(bucketsData.buckets);
+
+            modal.show();
+        } catch (error) {
+            console.error('Error loading bucket info:', error);
+            window.toast.error('Failed to load bucket list');
+        }
+    }
+
+    populateBucketDropdown(buckets, type) {
+        const selectEl = document.getElementById('bucket-name-select');
+        selectEl.innerHTML = '';
+
+        if (!buckets || buckets.length === 0) {
+            selectEl.innerHTML = '<option value="">No buckets available</option>';
+            return;
+        }
+
+        buckets.forEach(bucket => {
+            const option = document.createElement('option');
+            option.value = bucket.name;
+            option.textContent = bucket.name;
+
+            // Mark default buckets
+            if (bucket.isDefault) {
+                option.textContent += ' (default)';
+                option.classList.add('fw-bold');
+            }
+
+            selectEl.appendChild(option);
+        });
+
+        // Store all buckets for filtering
+        this.allBuckets = buckets;
+    }
+
+    setupBucketFilter(buckets) {
+        const filterInput = document.getElementById('bucket-filter-input');
+        const selectEl = document.getElementById('bucket-name-select');
+
+        filterInput.addEventListener('input', (e) => {
+            const filterText = e.target.value.toLowerCase();
+            const currentValue = selectEl.value;
+
+            // Filter buckets
+            const filteredBuckets = buckets.filter(bucket =>
+                bucket.name.toLowerCase().includes(filterText)
+            );
+
+            // Repopulate dropdown
+            selectEl.innerHTML = '';
+            filteredBuckets.forEach(bucket => {
+                const option = document.createElement('option');
+                option.value = bucket.name;
+                option.textContent = bucket.name;
+
+                if (bucket.isDefault) {
+                    option.textContent += ' (default)';
+                    option.classList.add('fw-bold');
+                }
+
+                selectEl.appendChild(option);
+            });
+
+            // Try to maintain selection
+            if (filteredBuckets.find(b => b.name === currentValue)) {
+                selectEl.value = currentValue;
+            }
+        });
+    }
+
+    useDefaultBucket() {
+        const selectEl = document.getElementById('bucket-name-select');
+        if (this.currentBucketType === 'build') {
+            selectEl.value = this.defaultBuildBucket;
+        } else {
+            selectEl.value = this.defaultDeployBucket;
+        }
+    }
+
+    async applyBucketChange() {
+        const selectEl = document.getElementById('bucket-name-select');
+        const bucketName = selectEl.value.trim();
+
+        if (!bucketName) {
+            window.toast.error('Please select a bucket');
+            return;
+        }
+
+        try {
+            // Save to session storage
+            if (this.currentBucketType === 'build') {
+                sessionStorage.setItem('customBuildBucket', bucketName);
+            } else {
+                sessionStorage.setItem('customDeployBucket', bucketName);
+            }
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bucketSelectorModal'));
+            modal.hide();
+
+            // Show toast and reload
+            const bucketType = this.currentBucketType === 'build' ? 'Build Artifacts' : 'Deploy WebUI';
+            window.toast.success(`${bucketType} bucket changed to: ${bucketName}`);
+
+            // Reload the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+
+        } catch (error) {
+            console.error('Error applying bucket change:', error);
+            window.toast.error('Failed to apply bucket change');
+        }
     }
 }
 
