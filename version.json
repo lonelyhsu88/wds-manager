@@ -1,6 +1,19 @@
 {
-  "version": "1.19.14",
+  "version": "1.20.0",
   "history": [
+    {
+      "version": "1.20.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Implemented automatic config file copying to deployed games",
+        "Added environment-based config mapping (CONFIG_MAPPING_*)",
+        "Special handling for arcade games (arcadeconfig.json → hashconfig.json)",
+        "Added API endpoints: GET /api/config/mappings, POST /api/config/copy",
+        "Config copy integrated into deployment flow (non-blocking)",
+        "Full audit logging for manual config operations",
+        "Supports hash (41 games), bingo (11 games), and arcade (4 games)"
+      ]
+    },
     {
       "version": "1.19.14",
       "date": "2025-10-27",
