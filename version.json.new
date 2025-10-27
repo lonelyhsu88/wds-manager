@@ -1,0 +1,33 @@
+{
+  "version": "1.19.1",
+  "history": [
+    {
+      "version": "1.19.1",
+      "date": "2025-10-27",
+      "changes": [
+        "Fixed SSO verification with Operations Portal",
+        "Updated SSO service to correctly parse Portal response (response.data.data instead of response.data.user)",
+        "Aligned field mappings with Operations Portal API (userData.name, userData.avatarUrl)",
+        "SSO login from https://ops.ftgaming.cc now works correctly"
+      ]
+    },
+    {
+      "version": "1.19.0",
+      "date": "2025-10-27",
+      "changes": [
+        "Added SSO integration with Operations Portal",
+        "Implemented complete Role-Based Access Control (RBAC) system",
+        "Added three role levels: Admin, Operator, Viewer",
+        "Created role-based permission middleware",
+        "Implemented email and domain-based role mapping",
+        "Added role-mappings.json for dynamic role assignment",
+        "Enhanced session security with 8-hour rolling sessions",
+        "Updated session cookies with proper security settings",
+        "Added SSO verification with Operations Portal API",
+        "Created Mock SSO mode for development testing",
+        "Multi-platform Docker image (linux/amd64 + linux/arm64)",
+        "Simplified deployment with one-command run.sh script",
+        "Comprehensive SSO documentation and guides"
+      ]
+    },
+}

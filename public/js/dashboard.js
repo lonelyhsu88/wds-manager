@@ -21,10 +21,10 @@ class Dashboard {
         document.getElementById('user-name').textContent = data.user.displayName || data.user.email.split('@')[0];
         document.getElementById('user-email').textContent = data.user.email;
 
-        if (data.user.photo) {
+        if (data.user.image) {
           const userPhoto = document.getElementById('user-photo');
           const userIcon = document.getElementById('user-icon');
-          userPhoto.src = data.user.photo;
+          userPhoto.src = data.user.image;
           userPhoto.style.display = 'inline-block';
           userIcon.style.display = 'none';
         }
@@ -90,7 +90,7 @@ class Dashboard {
       return;
     }
 
-    const recent = deployments.slice(0, 5);
+    const recent = deployments.slice(0, 3);
     let html = '';
 
     recent.forEach(deployment => {
@@ -111,7 +111,6 @@ class Dashboard {
                 <strong class="ms-2">${artifactCount} artifact(s) deployed</strong>
               </div>
               <small class="text-muted d-block">${date}</small>
-              <small class="text-muted">By: ${deployment.user?.email || 'Unknown'}</small>
             </div>
             <span class="badge bg-${statusClass}">${deployment.status}</span>
           </div>
@@ -171,7 +170,6 @@ class Dashboard {
 
   createCharts(data) {
     this.createTrendChart(data.deploymentTrend);
-    this.createSuccessChart(data.successRate);
     this.createTopGamesChart(data.topGames);
   }
 
@@ -246,49 +244,6 @@ class Dashboard {
     });
   }
 
-  createSuccessChart(successRate) {
-    const ctx = document.getElementById('successChart');
-
-    if (this.charts.success) {
-      this.charts.success.destroy();
-    }
-
-    this.charts.success = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Successful', 'Failed'],
-        datasets: [{
-          data: [successRate.successful, successRate.failed],
-          backgroundColor: [
-            'rgb(25, 135, 84)',
-            'rgb(220, 53, 69)'
-          ],
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      }
-    });
-  }
 
   createTopGamesChart(topGames) {
     const ctx = document.getElementById('topGamesChart');
@@ -302,8 +257,9 @@ class Dashboard {
       return;
     }
 
-    const labels = topGames.map(g => g.name);
-    const data = topGames.map(g => g.count);
+    const top5Games = topGames.slice(0, 5);
+    const labels = top5Games.map(g => g.name);
+    const data = top5Games.map(g => g.count);
 
     this.charts.topGames = new Chart(ctx, {
       type: 'bar',

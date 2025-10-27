@@ -325,13 +325,35 @@ router.post('/deploy', validateDeploy, deployLimiter, ensureAuthenticated, async
 router.post('/clear-deploy', validateClearDeploy, deployLimiter, ensureAuthenticated, async (req, res) => {
   try {
     const { prefix = '' } = req.body;
-    const result = await s3Service.clearDeployBucket(prefix);
+    const io = req.app.get('io');
+
+    // Create progress callback to emit Socket.IO events
+    const progressCallback = (progressData) => {
+      if (io) {
+        io.emit('clear-bucket-progress', {
+          ...progressData,
+          user: req.user.email
+        });
+      }
+    };
+
+    const result = await s3Service.clearDeployBucket(prefix, progressCallback);
+
     res.json({
       success: true,
       ...result
     });
   } catch (error) {
     logger.error('Error clearing deploy bucket:', error);
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('clear-bucket-progress', {
+        phase: 'error',
+        message: `Error: ${error.message}`,
+        error: error.message,
+        user: req.user.email
+      });
+    }
     res.status(500).json({ error: 'Failed to clear deploy bucket' });
   }
 });

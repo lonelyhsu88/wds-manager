@@ -4,6 +4,21 @@ const versionParser = require('../utils/versionParser');
 const gameCategories = require('../utils/gameCategories');
 
 class S3Service {
+  constructor() {
+    // Cache for game version history
+    this.versionHistoryCache = {
+      data: null,
+      timestamp: null,
+      ttl: 5 * 60 * 1000 // 5 minutes TTL
+    };
+
+    // Cache for deployed game versions
+    this.deployedVersionsCache = {
+      data: null,
+      timestamp: null,
+      ttl: 2 * 60 * 1000 // 2 minutes TTL (shorter than version history)
+    };
+  }
   /**
    * List directories and files in build artifacts bucket
    * @param {string} prefix - The prefix (directory) to list
@@ -117,17 +132,31 @@ class S3Service {
    */
   async listDeployedFiles(prefix = '') {
     try {
-      const params = {
-        Bucket: buckets.deployWebUI,
-        Prefix: prefix
-      };
+      const allFiles = [];
+      let continuationToken = null;
 
-      const data = await s3.listObjectsV2(params).promise();
-      return (data.Contents || []).map(item => ({
-        key: item.Key,
-        size: item.Size,
-        lastModified: item.LastModified
-      }));
+      do {
+        const params = {
+          Bucket: buckets.deployWebUI,
+          Prefix: prefix,
+          ContinuationToken: continuationToken
+        };
+
+        const data = await s3.listObjectsV2(params).promise();
+
+        if (data.Contents && data.Contents.length > 0) {
+          allFiles.push(...data.Contents.map(item => ({
+            key: item.Key,
+            size: item.Size,
+            lastModified: item.LastModified
+          })));
+        }
+
+        continuationToken = data.IsTruncated ? data.NextContinuationToken : null;
+      } while (continuationToken);
+
+      logger.info(`Listed ${allFiles.length} files from deploy bucket with prefix: ${prefix || '(root)'}`);
+      return allFiles;
     } catch (error) {
       logger.error('Error listing deployed files:', error);
       throw error;
@@ -137,31 +166,120 @@ class S3Service {
   /**
    * Delete all objects in deploy webui bucket
    * @param {string} prefix - Optional prefix to delete only specific path
+   * @param {Function} progressCallback - Optional callback for progress updates
    */
-  async clearDeployBucket(prefix = '') {
+  async clearDeployBucket(prefix = '', progressCallback = null) {
     try {
+      // Emit listing phase
+      if (progressCallback) {
+        progressCallback({
+          phase: 'listing',
+          message: 'Scanning bucket for files...',
+          progress: 0
+        });
+      }
+
       const files = await this.listDeployedFiles(prefix);
 
       if (files.length === 0) {
         logger.info('No files to delete in deploy bucket');
+        if (progressCallback) {
+          progressCallback({
+            phase: 'complete',
+            message: 'No files to delete',
+            progress: 100,
+            deletedCount: 0
+          });
+        }
         return { deletedCount: 0 };
       }
 
-      const deleteParams = {
-        Bucket: buckets.deployWebUI,
-        Delete: {
-          Objects: files.map(file => ({ Key: file.key })),
-          Quiet: false
+      logger.info(`Found ${files.length} files to delete from deploy bucket`);
+
+      if (progressCallback) {
+        progressCallback({
+          phase: 'deleting',
+          message: `Found ${files.length} files to delete`,
+          progress: 0,
+          totalFiles: files.length
+        });
+      }
+
+      // AWS deleteObjects can only delete 1000 objects at a time
+      const batchSize = 1000;
+      let totalDeleted = 0;
+      const allDeleted = [];
+      const totalBatches = Math.ceil(files.length / batchSize);
+
+      for (let i = 0; i < files.length; i += batchSize) {
+        const batch = files.slice(i, i + batchSize);
+        const currentBatch = Math.floor(i / batchSize) + 1;
+
+        const deleteParams = {
+          Bucket: buckets.deployWebUI,
+          Delete: {
+            Objects: batch.map(file => ({ Key: file.key })),
+            Quiet: false
+          }
+        };
+
+        const result = await s3.deleteObjects(deleteParams).promise();
+        const deletedCount = result.Deleted ? result.Deleted.length : 0;
+        totalDeleted += deletedCount;
+
+        if (result.Deleted) {
+          allDeleted.push(...result.Deleted);
         }
-      };
 
-      const result = await s3.deleteObjects(deleteParams).promise();
-      const deletedCount = result.Deleted ? result.Deleted.length : 0;
+        const progress = Math.round((totalDeleted / files.length) * 100);
 
-      logger.info(`Deleted ${deletedCount} files from deploy bucket`);
-      return { deletedCount, deleted: result.Deleted };
+        if (progressCallback) {
+          progressCallback({
+            phase: 'deleting',
+            message: `Deleting batch ${currentBatch}/${totalBatches}...`,
+            progress: progress,
+            deletedCount: totalDeleted,
+            totalFiles: files.length,
+            currentBatch: currentBatch,
+            totalBatches: totalBatches
+          });
+        }
+
+        logger.info(`Deleted batch ${currentBatch}/${totalBatches}: ${deletedCount} files (Total: ${totalDeleted}/${files.length})`);
+
+        if (result.Errors && result.Errors.length > 0) {
+          logger.error(`Errors in batch ${currentBatch}:`, result.Errors);
+        }
+      }
+
+      logger.info(`Total deleted ${totalDeleted} files from deploy bucket`);
+
+      // Clear caches after bucket clearing
+      this.clearDeployedVersionsCache();
+      this.clearVersionHistoryCache();
+      logger.info('Cleared deployed versions and version history caches');
+
+      if (progressCallback) {
+        progressCallback({
+          phase: 'complete',
+          message: `Successfully deleted ${totalDeleted} files`,
+          progress: 100,
+          deletedCount: totalDeleted,
+          totalFiles: files.length
+        });
+      }
+
+      return { deletedCount: totalDeleted, deleted: allDeleted };
     } catch (error) {
       logger.error('Error clearing deploy bucket:', error);
+      if (progressCallback) {
+        progressCallback({
+          phase: 'error',
+          message: `Error: ${error.message}`,
+          progress: 0,
+          error: error.message
+        });
+      }
       throw error;
     }
   }
@@ -221,10 +339,33 @@ class S3Service {
   }
 
   /**
-   * Read version.txt files from all game directories in deploy bucket
+   * Clear deployed versions cache
+   * Call this after deployments to ensure fresh data
    */
-  async readGameVersions() {
+  clearDeployedVersionsCache() {
+    this.deployedVersionsCache.data = null;
+    this.deployedVersionsCache.timestamp = null;
+    logger.info('Deployed versions cache cleared');
+  }
+
+  /**
+   * Read version.txt files from all game directories in deploy bucket
+   * Now with caching and parallel S3 reads for better performance
+   */
+  async readGameVersions(forceRefresh = false) {
     try {
+      // Check cache first
+      const now = Date.now();
+      if (!forceRefresh && this.deployedVersionsCache.data && this.deployedVersionsCache.timestamp) {
+        const cacheAge = now - this.deployedVersionsCache.timestamp;
+        if (cacheAge < this.deployedVersionsCache.ttl) {
+          logger.info(`Returning cached deployed versions (age: ${Math.round(cacheAge / 1000)}s)`);
+          return this.deployedVersionsCache.data;
+        }
+      }
+
+      logger.info('Reading deployed game versions from S3...');
+
       // List all directories in deploy bucket
       const params = {
         Bucket: buckets.deployWebUI,
@@ -232,16 +373,13 @@ class S3Service {
       };
 
       const data = await s3.listObjectsV2(params).promise();
-      const versions = [];
-
-      // For each directory, try to read version.txt
       const directories = data.CommonPrefixes || [];
 
-      for (const dir of directories) {
+      // Read all version.txt files IN PARALLEL
+      const versionPromises = directories.map(async (dir) => {
         const dirName = dir.Prefix.replace('/', '');
 
         try {
-          // Try to read version.txt from this directory
           const versionParams = {
             Bucket: buckets.deployWebUI,
             Key: `${dir.Prefix}version.txt`
@@ -250,44 +388,55 @@ class S3Service {
           const versionData = await s3.getObject(versionParams).promise();
           const versionContent = versionData.Body.toString('utf-8').trim();
 
-          versions.push({
+          return {
             game: dirName,
             version: versionContent,
             lastModified: versionData.LastModified
-          });
-
-          logger.info(`Read version for ${dirName}: ${versionContent}`);
+          };
         } catch (error) {
-          // If version.txt doesn't exist, skip
+          // If version.txt doesn't exist, return null
           if (error.code !== 'NoSuchKey') {
             logger.warn(`Error reading version for ${dirName}:`, error.message);
           }
+          return null;
         }
-      }
+      });
 
-      // Also check for version.txt files in root (not in directories)
-      try {
-        const rootVersionParams = {
-          Bucket: buckets.deployWebUI,
-          Key: 'version.txt'
-        };
+      // Also check for root version.txt
+      const rootVersionPromise = (async () => {
+        try {
+          const rootVersionParams = {
+            Bucket: buckets.deployWebUI,
+            Key: 'version.txt'
+          };
 
-        const rootVersionData = await s3.getObject(rootVersionParams).promise();
-        const rootVersionContent = rootVersionData.Body.toString('utf-8').trim();
+          const rootVersionData = await s3.getObject(rootVersionParams).promise();
+          const rootVersionContent = rootVersionData.Body.toString('utf-8').trim();
 
-        versions.push({
-          game: 'root',
-          version: rootVersionContent,
-          lastModified: rootVersionData.LastModified
-        });
-      } catch (error) {
-        // Root version.txt is optional
-      }
+          return {
+            game: 'root',
+            version: rootVersionContent,
+            lastModified: rootVersionData.LastModified
+          };
+        } catch (error) {
+          // Root version.txt is optional
+          return null;
+        }
+      })();
 
-      // Sort by game name
+      // Wait for all reads to complete in parallel
+      const allResults = await Promise.all([...versionPromises, rootVersionPromise]);
+
+      // Filter out null results and sort
+      const versions = allResults.filter(v => v !== null);
       versions.sort((a, b) => a.game.localeCompare(b.game));
 
-      logger.info(`Found ${versions.length} game versions`);
+      logger.info(`Found ${versions.length} game versions (read in parallel)`);
+
+      // Update cache
+      this.deployedVersionsCache.data = versions;
+      this.deployedVersionsCache.timestamp = now;
+
       return versions;
 
     } catch (error) {
@@ -437,8 +586,28 @@ class S3Service {
    * Scans all artifacts, groups by game name, and returns last 3 versions for each
    * @returns {Promise<Object>} Object with games array containing version history
    */
-  async getGameVersionHistory() {
+  /**
+   * Clear version history cache
+   * Call this after deployments to ensure fresh data
+   */
+  clearVersionHistoryCache() {
+    this.versionHistoryCache.data = null;
+    this.versionHistoryCache.timestamp = null;
+    logger.info('Version history cache cleared');
+  }
+
+  async getGameVersionHistory(forceRefresh = false) {
     try {
+      // Check cache first
+      const now = Date.now();
+      if (!forceRefresh && this.versionHistoryCache.data && this.versionHistoryCache.timestamp) {
+        const cacheAge = now - this.versionHistoryCache.timestamp;
+        if (cacheAge < this.versionHistoryCache.ttl) {
+          logger.info(`Returning cached version history (age: ${Math.round(cacheAge / 1000)}s)`);
+          return this.versionHistoryCache.data;
+        }
+      }
+
       logger.info('Starting to scan build artifacts for version history');
 
       // Object to store all versions for each game
@@ -543,11 +712,18 @@ class S3Service {
 
       logger.info(`Returning version history for ${games.length} games`);
 
-      return {
+      const result = {
         games,
         totalGames: games.length,
         scannedAt: new Date().toISOString()
       };
+
+      // Update cache
+      this.versionHistoryCache.data = result;
+      this.versionHistoryCache.timestamp = now;
+      logger.info('Version history cache updated');
+
+      return result;
 
     } catch (error) {
       logger.error('Error getting game version history:', error);

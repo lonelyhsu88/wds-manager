@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   wds-manager:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - VERSION=${APP_VERSION:-1.0.1}
-    image: ${DOCKER_IMAGE_NAME:-wds-manager}:${APP_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-470013648166.dkr.ecr.ap-east-1.amazonaws.com}/wds-manager:${APP_VERSION:-latest}
+    # Uncomment the following to build locally instead of pulling from ECR
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   args:
+    #     - VERSION=${APP_VERSION:-1.19.0}
     container_name: wds-manager
     restart: unless-stopped
     ports:

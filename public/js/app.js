@@ -9,6 +9,9 @@ class DeploymentManager {
         this.searchFilter = null;
         this.presetManager = null;
 
+        // Initialize Socket.IO connection
+        this.socket = io();
+
         // Load view mode preference from localStorage
         const savedViewMode = localStorage.getItem('viewMode');
         if (savedViewMode && ['list', 'category', 'card'].includes(savedViewMode)) {
@@ -54,22 +57,8 @@ class DeploymentManager {
     }
 
     restoreViewMode() {
-        // Set button states based on saved view mode
-        const listBtn = document.getElementById('view-list-btn');
-        const categoryBtn = document.getElementById('view-category-btn');
-        const cardBtn = document.getElementById('view-card-btn');
-
-        listBtn.classList.remove('active');
-        categoryBtn.classList.remove('active');
-        cardBtn.classList.remove('active');
-
-        if (this.viewMode === 'list') {
-            listBtn.classList.add('active');
-        } else if (this.viewMode === 'card') {
-            cardBtn.classList.add('active');
-        } else {
-            categoryBtn.classList.add('active');
-        }
+        // Always use list view
+        this.viewMode = 'list';
     }
 
     async loadUserInfo() {
@@ -85,10 +74,10 @@ class DeploymentManager {
                 document.getElementById('user-email').textContent = data.user.email;
 
                 // Update user photo if available
-                if (data.user.photo) {
+                if (data.user.image) {
                     const userPhoto = document.getElementById('user-photo');
                     const userIcon = document.getElementById('user-icon');
-                    userPhoto.src = data.user.photo;
+                    userPhoto.src = data.user.image;
                     userPhoto.style.display = 'inline-block';
                     userIcon.style.display = 'none';
                 }
@@ -99,19 +88,6 @@ class DeploymentManager {
     }
 
     setupEventListeners() {
-        // View toggle buttons
-        document.getElementById('view-list-btn').addEventListener('click', () => {
-            this.switchView('list');
-        });
-
-        document.getElementById('view-category-btn').addEventListener('click', () => {
-            this.switchView('category');
-        });
-
-        document.getElementById('view-card-btn').addEventListener('click', () => {
-            this.switchView('card');
-        });
-
         // Refresh button
         document.getElementById('refresh-btn').addEventListener('click', () => {
             this.loadArtifacts(this.currentPrefix);
@@ -239,61 +215,18 @@ class DeploymentManager {
         }
     }
 
-    switchView(mode) {
-        this.viewMode = mode;
-
-        // Save preference to localStorage
-        localStorage.setItem('viewMode', mode);
-
-        // Update button states
-        const listBtn = document.getElementById('view-list-btn');
-        const categoryBtn = document.getElementById('view-category-btn');
-        const cardBtn = document.getElementById('view-card-btn');
-
-        listBtn.classList.remove('active');
-        categoryBtn.classList.remove('active');
-        cardBtn.classList.remove('active');
-
-        if (mode === 'list') {
-            listBtn.classList.add('active');
-        } else if (mode === 'category') {
-            categoryBtn.classList.add('active');
-        } else if (mode === 'card') {
-            cardBtn.classList.add('active');
-        }
-
-        // Reload artifacts with new view mode
-        this.loadArtifacts(this.currentPrefix);
-    }
+    // View switching removed - always use list view
 
     async loadArtifacts(prefix = '') {
         const fileList = document.getElementById('file-list');
-        const categoryView = document.getElementById('category-view');
-        const cardView = document.getElementById('card-view');
 
         // Show loading state
         const loadingHtml = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div><p class="mt-2">Loading...</p></div>';
-
-        if (this.viewMode === 'category') {
-            categoryView.innerHTML = loadingHtml;
-            categoryView.style.display = 'block';
-            fileList.style.display = 'none';
-            cardView.style.display = 'none';
-        } else if (this.viewMode === 'card') {
-            cardView.innerHTML = loadingHtml;
-            cardView.style.display = 'grid';
-            fileList.style.display = 'none';
-            categoryView.style.display = 'none';
-        } else {
-            fileList.innerHTML = loadingHtml;
-            fileList.style.display = 'block';
-            categoryView.style.display = 'none';
-            cardView.style.display = 'none';
-        }
+        fileList.innerHTML = loadingHtml;
+        fileList.style.display = 'block';
 
         try {
-            const categorizeParam = (this.viewMode === 'category' || this.viewMode === 'card') ? '&categorize=true' : '';
-            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}${categorizeParam}`, {
+            const response = await fetch(`/api/artifacts?prefix=${encodeURIComponent(prefix)}`, {
                 headers: this.getCustomBucketHeaders()
             });
             const data = await response.json();
@@ -302,24 +235,11 @@ class DeploymentManager {
             this.allFiles = data.files;
 
             this.updateBreadcrumb(prefix);
-
-            if (this.viewMode === 'category' && data.categories) {
-                this.renderCategoryView(data.categories);
-            } else if (this.viewMode === 'card' && data.categories) {
-                this.renderCardView(data.categories);
-            } else {
-                this.renderFileList(data);
-            }
+            this.renderFileList(data);
         } catch (error) {
             console.error('Error loading artifacts:', error);
             const errorHtml = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Failed to load artifacts</p></div>';
-            if (this.viewMode === 'category') {
-                categoryView.innerHTML = errorHtml;
-            } else if (this.viewMode === 'card') {
-                cardView.innerHTML = errorHtml;
-            } else {
-                fileList.innerHTML = errorHtml;
-            }
+            fileList.innerHTML = errorHtml;
         }
     }
 
@@ -550,7 +470,6 @@ class DeploymentManager {
                                    ${isSelected ? 'checked' : ''}>
                         </div>
                         <div class="game-card-body">
-                            <div class="game-card-title" title="${gameName}">${gameName}</div>
                             <div class="game-card-meta">
                                 <div><i class="bi bi-hdd"></i> ${fileSize}</div>
                                 <div><i class="bi bi-clock"></i> ${lastModified}</div>
@@ -813,6 +732,20 @@ class DeploymentManager {
                 })
             });
 
+            // Check if response is not OK (redirect, error, etc.)
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 302) {
+                    throw new Error('Authentication required. Please log in again.');
+                }
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            }
+
+            // Check content type before parsing JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid response format. You may need to log in again.');
+            }
+
             const result = await response.json();
 
             if (result.success) {
@@ -838,6 +771,113 @@ class DeploymentManager {
             return;
         }
 
+        const clearBtn = document.getElementById('clear-deploy-bucket-btn');
+        const originalBtnText = clearBtn.innerHTML;
+
+        // Show progress UI
+        clearBtn.disabled = true;
+        clearBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Clearing...';
+
+        // Create progress modal
+        const progressHtml = `
+            <div class="modal fade" id="clearProgressModal" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Clearing Deploy Bucket</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span id="clear-progress-message">Initializing...</span>
+                                    <span id="clear-progress-percentage">0%</span>
+                                </div>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                         id="clear-progress-bar"
+                                         role="progressbar"
+                                         style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div id="clear-progress-details" class="text-muted small"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('clearProgressModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', progressHtml);
+        const modal = new bootstrap.Modal(document.getElementById('clearProgressModal'));
+        modal.show();
+
+        // Listen for progress events
+        const progressHandler = (data) => {
+            const progressBar = document.getElementById('clear-progress-bar');
+            const progressMessage = document.getElementById('clear-progress-message');
+            const progressPercentage = document.getElementById('clear-progress-percentage');
+            const progressDetails = document.getElementById('clear-progress-details');
+
+            if (!progressBar) return;
+
+            progressBar.style.width = data.progress + '%';
+            progressPercentage.textContent = data.progress + '%';
+            progressMessage.textContent = data.message;
+
+            if (data.phase === 'deleting' && data.deletedCount !== undefined) {
+                progressDetails.textContent = `Deleted ${data.deletedCount} of ${data.totalFiles} files`;
+            }
+
+            if (data.phase === 'complete') {
+                progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                progressBar.classList.add('bg-success');
+                setTimeout(() => {
+                    modal.hide();
+                    window.toast.success(data.message);
+
+                    // Cleanup after modal is hidden
+                    setTimeout(() => {
+                        clearBtn.disabled = false;
+                        clearBtn.innerHTML = originalBtnText;
+                        this.socket.off('clear-bucket-progress', progressHandler);
+
+                        const modalElement = document.getElementById('clearProgressModal');
+                        if (modalElement) {
+                            modalElement.remove();
+                        }
+                    }, 500);
+                }, 1500);
+            } else if (data.phase === 'error') {
+                progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                progressBar.classList.add('bg-danger');
+                progressMessage.textContent = data.message;
+                setTimeout(() => {
+                    modal.hide();
+                    window.toast.error(data.message);
+
+                    // Cleanup after modal is hidden
+                    setTimeout(() => {
+                        clearBtn.disabled = false;
+                        clearBtn.innerHTML = originalBtnText;
+                        this.socket.off('clear-bucket-progress', progressHandler);
+
+                        const modalElement = document.getElementById('clearProgressModal');
+                        if (modalElement) {
+                            modalElement.remove();
+                        }
+                    }, 500);
+                }, 2000);
+            }
+        };
+
+        this.socket.on('clear-bucket-progress', progressHandler);
+
         try {
             const response = await fetch('/api/clear-deploy', {
                 method: 'POST',
@@ -846,20 +886,52 @@ class DeploymentManager {
                     ...this.getCustomBucketHeaders()
                 },
                 body: JSON.stringify({
-                    prefix: document.getElementById('target-prefix').value
+                    prefix: '' // Clear entire deploy bucket
                 })
             });
 
             const result = await response.json();
 
-            if (result.success) {
-                window.toast.success(`Deleted ${result.deletedCount} files from deploy bucket`);
-            } else {
+            if (!result.success) {
                 throw new Error('Failed to clear deploy bucket');
+            }
+
+            // If no Socket.IO events received, manually close after API success
+            // This is a fallback in case Socket.IO fails
+            if (document.getElementById('clear-progress-bar')) {
+                const currentProgress = parseInt(document.getElementById('clear-progress-bar').style.width) || 0;
+                if (currentProgress < 100) {
+                    // Force complete if still showing progress
+                    setTimeout(() => {
+                        modal.hide();
+                        window.toast.success(`Cleared ${result.deletedCount || 0} files from deploy bucket`);
+                        clearBtn.disabled = false;
+                        clearBtn.innerHTML = originalBtnText;
+                        this.socket.off('clear-bucket-progress', progressHandler);
+
+                        const modalElement = document.getElementById('clearProgressModal');
+                        if (modalElement) {
+                            modalElement.remove();
+                        }
+                    }, 1000);
+                }
             }
         } catch (error) {
             console.error('Error clearing deploy bucket:', error);
+            modal.hide();
             window.toast.error('Failed to clear deploy bucket');
+
+            // Cleanup on error
+            clearBtn.disabled = false;
+            clearBtn.innerHTML = originalBtnText;
+            this.socket.off('clear-bucket-progress', progressHandler);
+
+            setTimeout(() => {
+                const modalElement = document.getElementById('clearProgressModal');
+                if (modalElement) {
+                    modalElement.remove();
+                }
+            }, 500);
         }
     }
 

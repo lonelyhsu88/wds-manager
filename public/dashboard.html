@@ -31,7 +31,7 @@
                 <a href="/versions.html" class="btn btn-sm btn-outline-light">
                     <i class="bi bi-tag"></i> Versions
                 </a>
-                <span class="badge bg-info text-dark" id="version-badge">v1.13.0</span>
+                <span class="badge bg-info text-dark" id="version-badge">v1.19.9</span>
 
                 <!-- User Info -->
                 <div class="dropdown">
@@ -135,7 +135,7 @@
 
         <!-- Charts Section -->
         <div class="row mb-4">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
@@ -143,19 +143,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="trendChart" height="80"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-pie-chart"></i> Success Distribution
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="successChart"></canvas>
+                        <canvas id="trendChart" height="60"></canvas>
                     </div>
                 </div>
             </div>
@@ -166,11 +154,11 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="bi bi-bar-chart"></i> Top 10 Deployed Games
+                            <i class="bi bi-bar-chart"></i> Top 5 Deployed Games
                         </h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="topGamesChart" height="60"></canvas>
+                        <canvas id="topGamesChart" height="50"></canvas>
                     </div>
                 </div>
             </div>
@@ -250,30 +238,38 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="bi bi-lightning"></i> Quick Actions
+                            <i class="bi bi-lightning-fill text-warning"></i> Quick Actions
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-3">
-                                <button class="btn btn-primary w-100 mb-2" onclick="location.href='/index.html'">
-                                    <i class="bi bi-hash"></i> Deploy Hash Games
-                                </button>
+                                <div class="card quick-action-card" onclick="location.href='/index.html'">
+                                    <i class="bi bi-rocket-takeoff text-primary"></i>
+                                    <p class="action-title">New Deployment</p>
+                                    <small class="text-muted">Deploy artifacts</small>
+                                </div>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-success w-100 mb-2" onclick="location.href='/index.html'">
-                                    <i class="bi bi-grid-3x3-gap"></i> Deploy Bingo Games
-                                </button>
+                                <div class="card quick-action-card" onclick="location.href='/deployments.html'">
+                                    <i class="bi bi-clock-history text-info"></i>
+                                    <p class="action-title">Deployment History</p>
+                                    <small class="text-muted">View all deployments</small>
+                                </div>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-info w-100 mb-2" onclick="location.href='/deployments.html'">
-                                    <i class="bi bi-clock-history"></i> View Full History
-                                </button>
+                                <div class="card quick-action-card" onclick="location.href='/versions.html'">
+                                    <i class="bi bi-tag-fill text-success"></i>
+                                    <p class="action-title">Version Manager</p>
+                                    <small class="text-muted">Manage versions</small>
+                                </div>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-warning w-100 mb-2" id="download-audit-btn">
-                                    <i class="bi bi-download"></i> Download Audit Log
-                                </button>
+                                <div class="card quick-action-card" id="download-audit-btn">
+                                    <i class="bi bi-download text-warning"></i>
+                                    <p class="action-title">Download Audit</p>
+                                    <small class="text-muted">Export audit log</small>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -28,7 +28,7 @@
                 <a href="/versions.html" class="btn btn-sm btn-outline-light">
                     <i class="bi bi-tag"></i> Versions
                 </a>
-                <span class="badge bg-info text-dark" id="version-badge">v1.13.0</span>
+                <span class="badge bg-info text-dark" id="version-badge">v1.19.9</span>
 
                 <!-- User Info -->
                 <div class="dropdown">
@@ -57,63 +57,7 @@
         <!-- Search and Filter Bar -->
         <div class="search-filter-bar">
             <div class="row g-3 align-items-center">
-                <!-- Search Box -->
-                <div class="col-lg-5 col-md-12">
-                    <div class="search-box">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" class="form-control" id="global-search-input"
-                               placeholder="Search games... (Ctrl+K)">
-                        <button class="clear-search-btn" id="clear-search-btn">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Category Filters -->
-                <div class="col-lg-5 col-md-8">
-                    <div class="category-filters">
-                        <button class="category-filter-btn active" data-category="all">
-                            <i class="bi bi-grid-3x2-gap"></i> All
-                        </button>
-                        <button class="category-filter-btn" data-category="hash">
-                            <i class="bi bi-hash"></i> Hash
-                        </button>
-                        <button class="category-filter-btn" data-category="bingo">
-                            <i class="bi bi-grid-3x3"></i> Bingo
-                        </button>
-                        <button class="category-filter-btn" data-category="arcade">
-                            <i class="bi bi-joystick"></i> Arcade
-                        </button>
-                        <button class="category-filter-btn" data-category="resources">
-                            <i class="bi bi-box-seam"></i> Resources
-                        </button>
-                        <button class="category-filter-btn" data-category="dashboard">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </button>
-                        <button class="category-filter-btn" data-category="event">
-                            <i class="bi bi-calendar-event"></i> Event
-                        </button>
-                        <button class="category-filter-btn" data-category="jump-page">
-                            <i class="bi bi-box-arrow-up-right"></i> Jump Page
-                        </button>
-                        <button class="category-filter-btn" data-category="game-demo">
-                            <i class="bi bi-controller"></i> Game Demo
-                        </button>
-                        <button class="category-filter-btn" data-category="ex-mgmt">
-                            <i class="bi bi-gear"></i> Ex-Mgmt
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Favorites & Results -->
-                <div class="col-lg-2 col-md-4">
-                    <button class="favorites-toggle-btn w-100" id="favorites-toggle-btn">
-                        <i class="bi bi-star-fill"></i> Favorites
-                    </button>
-                    <div class="search-results-info mt-2">
-                        <span id="search-results-count" style="display: none;"></span>
-                    </div>
-                </div>
+                <!-- Removed: Search Box, Category Filters, and Favorites -->
             </div>
         </div>
 
@@ -178,17 +122,6 @@
                             <i class="bi bi-folder2-open"></i> Build Artifacts Browser
                         </h5>
                         <div class="d-flex gap-2">
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-secondary" id="view-list-btn">
-                                    <i class="bi bi-list-ul"></i> List
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary active" id="view-category-btn">
-                                    <i class="bi bi-grid-3x3-gap"></i> Category
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" id="view-card-btn">
-                                    <i class="bi bi-grid-fill"></i> Cards
-                                </button>
-                            </div>
                             <button class="btn btn-sm btn-outline-primary" id="refresh-btn">
                                 <i class="bi bi-arrow-clockwise"></i> Refresh
                             </button>
@@ -222,18 +155,6 @@
                             <button type="button" class="btn btn-sm btn-outline-danger" id="delete-selected-btn" disabled>
                                 <i class="bi bi-trash"></i> Delete Selected
                             </button>
-                        </div>
-
-                        <!-- Category View -->
-                        <div id="category-view" style="display: none;">
-                            <div class="accordion" id="categoryAccordion">
-                                <!-- Categories will be dynamically inserted here -->
-                            </div>
-                        </div>
-
-                        <!-- Card View -->
-                        <div id="card-view" class="card-grid" style="display: none;">
-                            <!-- Cards will be dynamically inserted here -->
                         </div>
 
                         <!-- File List -->

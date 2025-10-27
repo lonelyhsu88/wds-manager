@@ -31,7 +31,7 @@
                 <a href="/versions.html" class="btn btn-sm btn-outline-light">
                     <i class="bi bi-tag"></i> Versions
                 </a>
-                <span class="badge bg-info text-dark" id="version-badge">v1.13.0</span>
+                <span class="badge bg-info text-dark" id="version-badge">v1.19.9</span>
 
                 <!-- User Info -->
                 <div class="dropdown">
@@ -528,6 +528,20 @@
                             isRollback
                         })
                     });
+
+                    // Check if response is not OK (redirect, error, etc.)
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 302) {
+                            throw new Error('Authentication required. Please log in again.');
+                        }
+                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    }
+
+                    // Check content type before parsing JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Invalid response format. You may need to log in again.');
+                    }
 
                     const result = await response.json();
 

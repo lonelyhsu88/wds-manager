@@ -1,0 +1,66 @@
+{
+  "resourceDeploymentRules": {
+    "i18n": {
+      "targetPrefix": "i18n",
+      "clearBeforeDeploy": true,
+      "extractZip": true,
+      "skipRootDir": true,
+      "description": "Internationalization resources"
+    },
+    "bundle-i18n": {
+      "targetPrefix": "bundle/Bundle_i18n",
+      "additionalTargets": [
+        "bundle-freebet/Bundle_i18n"
+      ],
+      "clearBeforeDeploy": true,
+      "extractZip": true,
+      "skipRootDir": true,
+      "findInternalDir": "Bundle_i18n",
+      "description": "Bundle i18n resources (deployed to multiple locations)"
+    },
+    "bundle-common": {
+      "targetPrefix": "bundle",
+      "clearBeforeDeploy": true,
+      "extractZip": true,
+      "skipRootDir": true,
+      "description": "Common bundle resources"
+    },
+    "bundle-common-freeBonus": {
+      "targetPrefix": "bundle-freebet",
+      "clearBeforeDeploy": true,
+      "extractZip": true,
+      "skipRootDir": true,
+      "description": "Free bonus bundle resources"
+    },
+    "game-webview": {
+      "targetPrefix": "game-webview",
+      "clearBeforeDeploy": true,
+      "extractZip": true,
+      "skipRootDir": true,
+      "description": "Game webview resources"
+    },
+    "game-configs": {
+      "targetPrefix": "",
+      "clearBeforeDeploy": false,
+      "extractZip": true,
+      "skipRootDir": true,
+      "preserveOtherFiles": true,
+      "description": "Game configuration files (preserves existing files in root)"
+    }
+  },
+  "defaultResourceRule": {
+    "targetPrefix": "{gameName}",
+    "clearBeforeDeploy": true,
+    "extractZip": true,
+    "skipRootDir": true,
+    "description": "Default deployment rule for resources"
+  },
+  "notes": [
+    "clearBeforeDeploy: Whether to delete existing files in target directory before deploying",
+    "skipRootDir: If true and ZIP contains single root directory, skip that directory",
+    "findInternalDir: Look for this specific directory inside extracted content (for bundle-i18n)",
+    "additionalTargets: Deploy to these additional directories (relative to deploy bucket root)",
+    "preserveOtherFiles: If true, only overwrite deployed files, keep other files intact",
+    "targetPrefix: Relative path from deploy bucket root. Empty string means deploy to root."
+  ]
+}

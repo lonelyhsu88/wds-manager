@@ -3,6 +3,7 @@ const pLimit = require('p-limit');
 const s3Service = require('./s3Service');
 const versionManager = require('../utils/versionManager');
 const logger = require('../utils/logger');
+const resourceDeployRules = require('../utils/resourceDeployRules');
 const path = require('path');
 const { uploadConfig } = require('../config/aws');
 
@@ -164,20 +165,41 @@ class DeployService {
         } else {
           // Get unique game names from all artifacts
           const gameNames = [...new Set(artifactKeys.map(key => this.extractGameName(key)))];
-          logger.info(`Clearing ${gameNames.length} game directories...`);
-          emitProgress({
-            phase: 'clearing',
-            message: `Clearing ${gameNames.length} game directory(s)...`,
-            percentage: 5
+
+          // Filter out games that should preserve other files (like game-configs)
+          const gamesToClear = gameNames.filter(gameName => {
+            if (resourceDeployRules.shouldPreserveOtherFiles(gameName)) {
+              logger.info(`Skipping clear for ${gameName} (preserveOtherFiles=true)`);
+              return false;
+            }
+            return true;
           });
 
-          let totalDeleted = 0;
-          for (const gameName of gameNames) {
-            const clearResult = await s3Service.clearDeployBucket(`${gameName}/`);
-            totalDeleted += clearResult.deletedCount;
+          if (gamesToClear.length > 0) {
+            logger.info(`Clearing ${gamesToClear.length} game directories...`);
+            emitProgress({
+              phase: 'clearing',
+              message: `Clearing ${gamesToClear.length} game directory(s)...`,
+              percentage: 5
+            });
+
+            let totalDeleted = 0;
+            for (const gameName of gamesToClear) {
+              // Get all target directories for this game (including additional targets)
+              const targets = resourceDeployRules.getAllTargets(gameName);
+
+              for (const target of targets) {
+                const prefix = target ? (target.endsWith('/') ? target : `${target}/`) : '';
+                if (prefix) { // Only clear if not root
+                  const clearResult = await s3Service.clearDeployBucket(prefix);
+                  totalDeleted += clearResult.deletedCount;
+                  logger.info(`Cleared ${clearResult.deletedCount} files from ${prefix}`);
+                }
+              }
+            }
+            deploymentLog.deletedCount = totalDeleted;
+            logger.info(`Cleared ${totalDeleted} files from ${gamesToClear.length} game directories`);
           }
-          deploymentLog.deletedCount = totalDeleted;
-          logger.info(`Cleared ${totalDeleted} files from ${gameNames.length} game directories`);
         }
       }
 
@@ -194,21 +216,27 @@ class DeployService {
       const artifactTasks = artifactKeys.map((artifactKey, index) => {
         return limit(async () => {
           try {
-            // Determine target prefix: custom or auto-parsed
-            let targetPrefix;
+            // Determine target prefix: custom or auto-parsed with resource rules
+            let targetPrefixes; // Can be array for multi-target deployment
             let gameName;
+
+            // Extract game name from artifact filename
+            gameName = this.extractGameName(artifactKey);
 
             if (customPrefix) {
               // Use custom prefix for all artifacts
-              targetPrefix = customPrefix.endsWith('/') ? customPrefix : `${customPrefix}/`;
-              gameName = customPrefix;
+              const prefix = customPrefix.endsWith('/') ? customPrefix : `${customPrefix}/`;
+              targetPrefixes = [prefix];
+              logger.info(`Processing artifact: ${artifactKey} -> ${prefix} (custom)`);
             } else {
-              // Extract game name from artifact filename
-              gameName = this.extractGameName(artifactKey);
-              targetPrefix = `${gameName}/`;
+              // Use resource deployment rules
+              const targets = resourceDeployRules.getAllTargets(gameName);
+              targetPrefixes = targets.map(t => {
+                if (t === '') return ''; // Root deployment
+                return t.endsWith('/') ? t : `${t}/`;
+              });
+              logger.info(`Processing artifact: ${artifactKey} -> ${targetPrefixes.join(', ')} (${resourceDeployRules.isResourceType(gameName) ? 'resource' : 'game'})`);
             }
-
-            logger.info(`Processing artifact: ${artifactKey} -> ${targetPrefix}`);
             const artifactProgress = (processedArtifacts / artifactKeys.length) * 80 + 10;
 
             // Mark artifact as started
@@ -241,52 +269,60 @@ class DeployService {
                 status: 'extracting'
               });
 
-              // Extract and upload zip contents with progress
-              const extractResult = await this.extractAndUploadZip(
-                artifactData,
-                artifactKey,
-                targetPrefix,
-                (fileProgress) => {
-                  const rawTotalProgress = artifactProgress + (fileProgress.percentage / artifactKeys.length) * 80;
-                  const clampedTotalProgress = Math.min(100, Math.max(0, rawTotalProgress));
-                  const clampedFileProgress = Math.min(100, Math.max(0, fileProgress.percentage));
+              // Deploy to all target prefixes (usually just one, but could be multiple for resources)
+              for (const targetPrefix of targetPrefixes) {
+                // Extract and upload zip contents with progress
+                const extractResult = await this.extractAndUploadZip(
+                  artifactData,
+                  artifactKey,
+                  targetPrefix,
+                  (fileProgress) => {
+                    const rawTotalProgress = artifactProgress + (fileProgress.percentage / artifactKeys.length) * 80;
+                    const clampedTotalProgress = Math.min(100, Math.max(0, rawTotalProgress));
+                    const clampedFileProgress = Math.min(100, Math.max(0, fileProgress.percentage));
 
-                  // Update artifact progress
-                  activeArtifacts.set(artifactKey, {
-                    name: path.basename(artifactKey),
-                    progress: clampedFileProgress,
-                    status: 'uploading',
-                    currentFile: path.basename(fileProgress.currentFile),
-                    gameName: gameName
-                  });
+                    // Update artifact progress
+                    activeArtifacts.set(artifactKey, {
+                      name: path.basename(artifactKey),
+                      progress: clampedFileProgress,
+                      status: 'uploading',
+                      currentFile: path.basename(fileProgress.currentFile),
+                      gameName: gameName,
+                      targetPrefix: targetPrefix
+                    });
 
-                  emitProgress({
-                    phase: 'uploading',
-                    message: `Uploading ${activeArtifacts.size} artifact(s)...`,
-                    currentFile: fileProgress.currentFile,
-                    fileProgress: clampedFileProgress,
-                    percentage: Math.round(clampedTotalProgress),
-                    activeArtifacts: Array.from(activeArtifacts.values())
-                  });
-                }
-              );
-              deploymentLog.uploadedFiles.push(...extractResult.files);
-              deploymentLog.totalFiles += extractResult.files.length;
+                    emitProgress({
+                      phase: 'uploading',
+                      message: `Uploading ${activeArtifacts.size} artifact(s)...`,
+                      currentFile: fileProgress.currentFile,
+                      fileProgress: clampedFileProgress,
+                      percentage: Math.round(clampedTotalProgress),
+                      activeArtifacts: Array.from(activeArtifacts.values())
+                    });
+                  }
+                );
+                deploymentLog.uploadedFiles.push(...extractResult.files);
+                deploymentLog.totalFiles += extractResult.files.length;
+              }
             } else {
-              // Upload as-is with game name prefix
+              // Upload as-is to all target prefixes
               const fileName = path.basename(artifactKey);
-              const targetKey = `${targetPrefix}${fileName}`;
 
-              activeArtifacts.set(artifactKey, {
-                name: path.basename(artifactKey),
-                progress: 50,
-                status: 'uploading',
-                gameName: gameName
-              });
+              for (const targetPrefix of targetPrefixes) {
+                const targetKey = `${targetPrefix}${fileName}`;
 
-              await s3Service.uploadToDeployBucket(targetKey, artifactData);
-              deploymentLog.uploadedFiles.push(targetKey);
-              deploymentLog.totalFiles += 1;
+                activeArtifacts.set(artifactKey, {
+                  name: path.basename(artifactKey),
+                  progress: 50,
+                  status: 'uploading',
+                  gameName: gameName,
+                  targetPrefix: targetPrefix
+                });
+
+                await s3Service.uploadToDeployBucket(targetKey, artifactData);
+                deploymentLog.uploadedFiles.push(targetKey);
+                deploymentLog.totalFiles += 1;
+              }
             }
 
             // Remove from active artifacts when done
@@ -317,10 +353,38 @@ class DeployService {
       // Wait for all artifacts to be processed
       const results = await Promise.all(artifactTasks);
 
-      // Step 3: Update deployment status
+      // Step 3: Create/update version.txt files for each deployed game
+      emitProgress({
+        phase: 'finalizing',
+        message: 'Updating version information...',
+        percentage: 95
+      });
+
+      const gameVersionUpdates = [];
+      for (const artifactKey of artifactKeys) {
+        try {
+          const gameName = customPrefix || this.extractGameName(artifactKey);
+          const version = this.extractVersion(artifactKey);
+
+          if (version) {
+            const versionFilePath = `${gameName}/version.txt`;
+            await s3Service.uploadToDeployBucket(versionFilePath, Buffer.from(version, 'utf-8'), {
+              ContentType: 'text/plain'
+            });
+            gameVersionUpdates.push({ game: gameName, version });
+            logger.info(`Updated version.txt for ${gameName}: ${version}`);
+          }
+        } catch (error) {
+          logger.error(`Error updating version.txt for ${artifactKey}:`, error);
+          // Don't fail deployment if version.txt update fails
+        }
+      }
+
+      // Step 4: Update deployment status
       deploymentLog.endTime = new Date().toISOString();
       deploymentLog.status = deploymentLog.errors.length === 0 ? 'success' : 'partial_success';
       deploymentLog.duration = this.calculateDuration(deploymentLog.startTime, deploymentLog.endTime);
+      deploymentLog.versionUpdates = gameVersionUpdates;
 
       // Record deployment in version history
       await versionManager.recordDeployment({
@@ -335,6 +399,10 @@ class DeployService {
           customPrefix
         }
       });
+
+      // Clear caches so next request gets fresh data
+      s3Service.clearVersionHistoryCache();
+      s3Service.clearDeployedVersionsCache();
 
       logger.info(`Deployment completed: ${deploymentLog.status}`);
       return deploymentLog;

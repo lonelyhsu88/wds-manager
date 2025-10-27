@@ -87,16 +87,26 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Load configuration
+const config = require('./config/env');
+
 // Session (required for Passport)
+const isProduction = config.app.nodeEnv === 'production';
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
-  resave: false,
+  secret: config.sessionSecret,
+  resave: true,
   saveUninitialized: false,
+  name: 'wds-manager.sid',
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    secure: isProduction || process.env.FORCE_SECURE_COOKIE === 'true',
+    sameSite: 'lax', // Allow SSO redirects while protecting against CSRF
+    maxAge: 1000 * 60 * 60 * 8, // 8 hours
+    path: '/',
+    domain: undefined
+  },
+  proxy: true,
+  rolling: true // Reset maxAge on every request
 }));
 
 // Initialize Passport

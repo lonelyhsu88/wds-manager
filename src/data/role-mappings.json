@@ -1,0 +1,9 @@
+{
+  "emailRoleMapping": {
+    "lonely.h@jvd.tw": ["Admin"]
+  },
+  "domainDefaultRoles": {
+    "jvd.tw": ["Viewer"],
+    "default": ["Viewer"]
+  }
+}
