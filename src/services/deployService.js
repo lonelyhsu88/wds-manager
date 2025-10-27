@@ -4,6 +4,7 @@ const s3Service = require('./s3Service');
 const versionManager = require('../utils/versionManager');
 const logger = require('../utils/logger');
 const resourceDeployRules = require('../utils/resourceDeployRules');
+const configCopyService = require('./configCopyService');
 const path = require('path');
 const { uploadConfig } = require('../config/aws');
 
@@ -357,7 +358,7 @@ class DeployService {
       emitProgress({
         phase: 'finalizing',
         message: 'Updating version information...',
-        percentage: 95
+        percentage: 90
       });
 
       const gameVersionUpdates = [];
@@ -378,6 +379,25 @@ class DeployService {
           logger.error(`Error updating version.txt for ${artifactKey}:`, error);
           // Don't fail deployment if version.txt update fails
         }
+      }
+
+      // Step 3.5: Copy configuration files to deployed games
+      let configCopyResults = null;
+      try {
+        const deployedGames = artifactKeys.map(key =>
+          customPrefix || this.extractGameName(key)
+        );
+
+        configCopyResults = await configCopyService.copyConfigsForDeployedGames(
+          deployedGames,
+          emitProgress,
+          req
+        );
+
+        logger.info(`Config copy results: ${configCopyResults.success} success, ${configCopyResults.failed} failed`);
+      } catch (error) {
+        logger.error('Error copying config files:', error);
+        // Don't fail deployment if config copy fails
       }
 
       // Step 4: Update deployment status

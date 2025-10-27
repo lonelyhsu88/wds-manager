@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const s3Service = require('../services/s3Service');
 const deployService = require('../services/deployService');
+const configCopyService = require('../services/configCopyService');
 const statsService = require('../services/statsService');
 const versionManager = require('../utils/versionManager');
 const logger = require('../utils/logger');
@@ -500,6 +501,61 @@ router.get('/artifacts/files', ensureAuthenticated, async (req, res) => {
     logger.error('Error getting artifact files:', error);
     res.status(500).json({
       error: 'Failed to get artifact files',
+      message: error.message
+    });
+  }
+});
+
+// Get current config mappings (requires authentication)
+router.get('/config/mappings', ensureAuthenticated, async (req, res) => {
+  try {
+    logger.info(`Config mappings requested by ${req.user?.email}`);
+
+    const mappings = configCopyService.getMappings();
+
+    res.json({ mappings });
+  } catch (error) {
+    logger.error('Error getting config mappings:', error);
+    res.status(500).json({
+      error: 'Failed to get config mappings',
+      message: error.message
+    });
+  }
+});
+
+// Copy config files to specific games manually (requires authentication)
+router.post('/config/copy', deployLimiter, ensureAuthenticated, async (req, res) => {
+  try {
+    const { games } = req.body;
+
+    if (!games || !Array.isArray(games) || games.length === 0) {
+      return res.status(400).json({ error: 'Games array is required and must not be empty' });
+    }
+
+    logger.info(`Manual config copy requested for ${games.length} games by ${req.user?.email}`);
+
+    // Audit log
+    await auditLogger.logAction(req.user.email, 'config_copy', {
+      games: games,
+      timestamp: new Date().toISOString()
+    });
+
+    const results = await configCopyService.copyConfigsForGames(games, req);
+
+    res.json({
+      message: 'Config copy completed',
+      results: {
+        total: results.total,
+        success: results.success,
+        failed: results.failed,
+        skipped: results.skipped
+      },
+      details: results.details
+    });
+  } catch (error) {
+    logger.error('Error copying config files:', error);
+    res.status(500).json({
+      error: 'Failed to copy config files',
       message: error.message
     });
   }
