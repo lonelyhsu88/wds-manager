@@ -1,6 +1,15 @@
 {
-  "version": "1.20.0",
+  "version": "1.20.1",
   "history": [
+    {
+      "version": "1.20.1",
+      "date": "2025-10-27",
+      "changes": [
+        "Fixed config auto-copy uploadToDeployBucket parameter order",
+        "Corrected from (buffer, key, contentType) to (key, buffer, metadata)",
+        "Resolves InvalidParameterType error during config file upload"
+      ]
+    },
     {
       "version": "1.20.0",
       "date": "2025-10-27",
