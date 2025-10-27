@@ -135,10 +135,11 @@ class ConfigCopyService {
 
       // Upload to S3
       const uploadResult = await s3Service.uploadToDeployBucket(
-        configBuffer,
         targetKey,
-        'application/json',
-        req
+        configBuffer,
+        {
+          ContentType: 'application/json'
+        }
       );
 
       logger.info(`Copied config ${configFilePath} to ${targetKey}`);
