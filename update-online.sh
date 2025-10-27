@@ -47,7 +47,7 @@ fi
 
 SERVER="$1"
 SSH_USER="${2:-root}"  # 默認使用 root
-TARGET_VERSION="1.19.11"
+TARGET_VERSION="1.20.0"
 
 show_header "線上 WDS Manager 更新腳本 v${TARGET_VERSION}"
 
@@ -55,23 +55,27 @@ log_info "目標服務器: ${SSH_USER}@${SERVER}"
 log_info "目標版本: ${TARGET_VERSION}"
 echo ""
 
+# SSH 密鑰路徑
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/hk-devops.pem}"
+SSH_OPTS="-i ${SSH_KEY} -o ConnectTimeout=5 -o StrictHostKeyChecking=no"
+
 # 測試 SSH 連接
 log_info "測試 SSH 連接..."
-if ssh -o ConnectTimeout=5 -o BatchMode=yes "${SSH_USER}@${SERVER}" "echo 'SSH 連接成功'" 2>/dev/null; then
+if ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "echo 'SSH 連接成功'" 2>/dev/null; then
     log_success "SSH 連接正常"
 else
     log_error "無法連接到服務器"
     log_info "請確認："
     echo "  1. 服務器地址正確"
-    echo "  2. SSH 密鑰已配置"
+    echo "  2. SSH 密鑰已配置 (${SSH_KEY})"
     echo "  3. 用戶名正確 (當前: ${SSH_USER})"
     exit 1
 fi
 
 # 檢查遠端 Docker
 log_info "檢查遠端 Docker..."
-if ssh "${SSH_USER}@${SERVER}" "docker --version" >/dev/null 2>&1; then
-    DOCKER_VERSION=$(ssh "${SSH_USER}@${SERVER}" "docker --version" | cut -d' ' -f3 | tr -d ',')
+if ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker --version" >/dev/null 2>&1; then
+    DOCKER_VERSION=$(ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker --version" | cut -d' ' -f3 | tr -d ',')
     log_success "Docker 已安裝: ${DOCKER_VERSION}"
 else
     log_error "遠端服務器未安裝 Docker"
@@ -80,7 +84,7 @@ fi
 
 # 檢查當前運行的容器
 log_info "檢查當前運行的容器..."
-CURRENT_CONTAINER=$(ssh "${SSH_USER}@${SERVER}" "docker ps --filter name=wds-manager --format '{{.ID}}:{{.Image}}:{{.Status}}'" 2>/dev/null || echo "")
+CURRENT_CONTAINER=$(ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker ps --filter name=wds-manager --format '{{.ID}}:{{.Image}}:{{.Status}}'" 2>/dev/null || echo "")
 
 if [[ -n "${CURRENT_CONTAINER}" ]]; then
     CONTAINER_ID=$(echo "${CURRENT_CONTAINER}" | cut -d':' -f1)
@@ -96,7 +100,7 @@ fi
 
 # 檢查遠端工作目錄
 log_info "檢查遠端工作目錄..."
-REMOTE_DIR=$(ssh "${SSH_USER}@${SERVER}" "find /root /home -name 'wds-manager' -type d 2>/dev/null | head -1" || echo "")
+REMOTE_DIR=$(ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "find /root /home -name 'wds-manager' -type d 2>/dev/null | head -1" || echo "")
 
 if [[ -z "${REMOTE_DIR}" ]]; then
     log_error "無法找到遠端 wds-manager 目錄"
@@ -124,32 +128,32 @@ fi
 show_header "開始更新"
 
 log_info "步驟 1/5: 登入 AWS ECR..."
-ssh "${SSH_USER}@${SERVER}" "AWS_PROFILE=gemini-pro_ck aws ecr get-login-password --region ap-east-1 | docker login --username AWS --password-stdin 470013648166.dkr.ecr.ap-east-1.amazonaws.com" || {
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "AWS_PROFILE=gemini-pro_ck aws ecr get-login-password --region ap-east-1 | docker login --username AWS --password-stdin 470013648166.dkr.ecr.ap-east-1.amazonaws.com" || {
     log_error "ECR 登入失敗"
     exit 1
 }
 log_success "ECR 登入成功"
 
 log_info "步驟 2/5: 拉取最新映像..."
-ssh "${SSH_USER}@${SERVER}" "docker pull 470013648166.dkr.ecr.ap-east-1.amazonaws.com/wds-manager:${TARGET_VERSION}" || {
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker pull 470013648166.dkr.ecr.ap-east-1.amazonaws.com/wds-manager:${TARGET_VERSION}" || {
     log_error "映像拉取失敗"
     exit 1
 }
 log_success "映像拉取成功"
 
 log_info "步驟 3/5: 停止現有容器..."
-ssh "${SSH_USER}@${SERVER}" "docker stop wds-manager 2>/dev/null || true"
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker stop wds-manager 2>/dev/null || true"
 log_success "容器已停止"
 
 log_info "步驟 4/5: 移除現有容器..."
-ssh "${SSH_USER}@${SERVER}" "docker rm wds-manager 2>/dev/null || true"
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker rm wds-manager 2>/dev/null || true"
 log_success "容器已移除"
 
 log_info "步驟 5/5: 啟動新容器..."
-ssh "${SSH_USER}@${SERVER}" "cd ${REMOTE_DIR} && bash run.sh" || {
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "cd ${REMOTE_DIR} && bash run.sh" || {
     log_error "容器啟動失敗"
     log_info "正在檢查錯誤日誌..."
-    ssh "${SSH_USER}@${SERVER}" "docker logs --tail 50 wds-manager 2>&1" || true
+    ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker logs --tail 50 wds-manager 2>&1" || true
     exit 1
 }
 log_success "容器已啟動"
@@ -162,7 +166,7 @@ sleep 10
 show_header "驗證更新"
 
 log_info "檢查容器狀態..."
-UPDATED_CONTAINER=$(ssh "${SSH_USER}@${SERVER}" "docker ps --filter name=wds-manager --format '{{.ID}}:{{.Image}}:{{.Status}}'" 2>/dev/null || echo "")
+UPDATED_CONTAINER=$(ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker ps --filter name=wds-manager --format '{{.ID}}:{{.Image}}:{{.Status}}'" 2>/dev/null || echo "")
 
 if [[ -n "${UPDATED_CONTAINER}" ]]; then
     CONTAINER_ID=$(echo "${UPDATED_CONTAINER}" | cut -d':' -f1)
@@ -178,14 +182,14 @@ else
 fi
 
 log_info "檢查服務響應..."
-if ssh "${SSH_USER}@${SERVER}" "curl -s -o /dev/null -w '%{http_code}' http://localhost:3015" | grep -q "200\|302"; then
+if ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "curl -s -o /dev/null -w '%{http_code}' http://localhost:3015" | grep -q "200\|302"; then
     log_success "服務響應正常"
 else
     log_warning "服務可能尚未完全啟動"
 fi
 
 log_info "檢查版本..."
-ONLINE_VERSION=$(ssh "${SSH_USER}@${SERVER}" "curl -s http://localhost:3015/api/version | grep -o '\"version\":\"[^\"]*\"' | cut -d'\"' -f4" 2>/dev/null || echo "unknown")
+ONLINE_VERSION=$(ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "curl -s http://localhost:3015/api/version | grep -o '\"version\":\"[^\"]*\"' | cut -d'\"' -f4" 2>/dev/null || echo "unknown")
 
 if [[ "${ONLINE_VERSION}" == "${TARGET_VERSION}" ]]; then
     log_success "線上版本正確: ${ONLINE_VERSION}"
@@ -198,7 +202,7 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}最近 30 行容器日誌：${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-ssh "${SSH_USER}@${SERVER}" "docker logs --tail 30 wds-manager"
+ssh ${SSH_OPTS} "${SSH_USER}@${SERVER}" "docker logs --tail 30 wds-manager"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 # 完成
